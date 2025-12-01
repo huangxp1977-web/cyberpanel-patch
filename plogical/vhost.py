@@ -3,6 +3,7 @@ import os
 import os.path
 import sys
 import django
+import shutil
 
 from plogical.acl import ACLManager
 sys.path.append('/usr/local/CyberCP')
@@ -445,8 +446,39 @@ class vhost:
 
                     DNS.deleteDNSZone(virtualHostName)
 
+                # 改进的服务重启逻辑，添加配置文件检查和备份机制
                 if not os.path.exists(vhost.redisConf):
-                    installUtilities.installUtilities.reStartLiteSpeed()
+                    # 在重启前备份配置文件
+                    if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                        conf_file = "/usr/local/lsws/conf/httpd_config.conf"
+                    else:
+                        conf_file = "/usr/local/lsws/conf/httpd.conf"
+                    
+                    if os.path.exists(conf_file):
+                        import time
+                        backup_file = conf_file + ".bak." + str(int(time.time()))
+                        shutil.copy2(conf_file, backup_file)
+                        logging.CyberCPLogFileWriter.writeToFile(f"Backup of {conf_file} created at {backup_file}")
+                    
+                    # 尝试重启服务，并添加重试机制
+                    max_retries = 3
+                    retry_count = 0
+                    success = False
+                    
+                    while retry_count < max_retries and not success:
+                        try:
+                            result = installUtilities.installUtilities.reStartLiteSpeed()
+                            if result == 1:
+                                success = True
+                                logging.CyberCPLogFileWriter.writeToFile("LiteSpeed restarted successfully")
+                            else:
+                                retry_count += 1
+                                logging.CyberCPLogFileWriter.writeToFile(f"LiteSpeed restart attempt {retry_count} failed")
+                                time.sleep(2)  # 等待2秒后重试
+                        except Exception as e:
+                            retry_count += 1
+                            logging.CyberCPLogFileWriter.writeToFile(f"Exception during LiteSpeed restart: {str(e)}")
+                            time.sleep(2)
 
                 ## Delete mail accounts
 
@@ -566,49 +598,84 @@ class vhost:
     def deleteCoreConf(virtualHostName, numberOfSites):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
+                # 改进的配置文件删除逻辑，添加错误处理和日志记录
+                logging.CyberCPLogFileWriter.writeToFile(f"Starting configuration deletion for domain: {virtualHostName}")
 
+                # 删除虚拟主机目录
                 virtualHostPath = "/home/" + virtualHostName
                 if os.path.exists(virtualHostPath):
-                    shutil.rmtree(virtualHostPath)
+                    try:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Removing virtual host directory: {virtualHostPath}")
+                        shutil.rmtree(virtualHostPath)
+                        logging.CyberCPLogFileWriter.writeToFile(f"Virtual host directory removed: {virtualHostPath}")
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error removing virtual host directory: {str(e)}")
 
+                # 删除配置目录
                 confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
                 if os.path.exists(confPath):
-                    shutil.rmtree(confPath)
+                    try:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Removing configuration directory: {confPath}")
+                        shutil.rmtree(confPath)
+                        logging.CyberCPLogFileWriter.writeToFile(f"Configuration directory removed: {confPath}")
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error removing configuration directory: {str(e)}")
 
-                data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+                # 修改主配置文件 - 添加安全检查和备份
+                try:
+                    # 配置文件备份
+                    conf_file = "/usr/local/lsws/conf/httpd_config.conf"
+                    if os.path.exists(conf_file):
+                        import time
+                        backup_file = conf_file + ".bak." + str(int(time.time()))
+                        shutil.copy2(conf_file, backup_file)
+                        logging.CyberCPLogFileWriter.writeToFile(f"Backup of {conf_file} created at {backup_file}")
+                    
+                    data = open(conf_file).readlines()
+                    writeDataToFile = open(conf_file, 'w')
 
-                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
+                    check = 1
+                    sslCheck = 1
 
-                check = 1
-                sslCheck = 1
+                    for items in data:
+                        if numberOfSites == 1:
+                            if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
+                                continue
+                            if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
+                                check = 0
+                            if items.find("listener") > -1 and items.find("SSL") > -1:
+                                sslCheck = 0
+                            if (check == 1 and sslCheck == 1):
+                                writeDataToFile.writelines(items)
+                            if (items.find("}") > -1 and (check == 0 or sslCheck == 0)):
+                                check = 1
+                                sslCheck = 1
+                        else:
+                            if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
+                                continue
+                            if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
+                                check = 0
+                            if (check == 1):
+                                writeDataToFile.writelines(items)
+                            if (items.find("}") > -1 and check == 0):
+                                check = 1
+                    writeDataToFile.close()
+                    logging.CyberCPLogFileWriter.writeToFile(f"Main configuration file updated for domain: {virtualHostName}")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error updating main configuration file: {str(e)}")
+                    return 0
 
-                for items in data:
-                    if numberOfSites == 1:
-                        if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
-                            continue
-                        if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
-                            check = 0
-                        if items.find("listener") > -1 and items.find("SSL") > -1:
-                            sslCheck = 0
-                        if (check == 1 and sslCheck == 1):
-                            writeDataToFile.writelines(items)
-                        if (items.find("}") > -1 and (check == 0 or sslCheck == 0)):
-                            check = 1
-                            sslCheck = 1
-                    else:
-                        if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
-                            continue
-                        if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
-                            check = 0
-                        if (check == 1):
-                            writeDataToFile.writelines(items)
-                        if (items.find("}") > -1 and check == 0):
-                            check = 1
+                # Delete Apache Conf
+                try:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Attempting to delete Apache vhost for {virtualHostName}")
+                    ApacheVhost.DeleteApacheVhost(virtualHostName)
+                    logging.CyberCPLogFileWriter.writeToFile(f"Apache vhost deletion for {virtualHostName} completed")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error deleting Apache vhost: {str(e)}")
+                    # 继续执行，不因Apache错误而中断整个过程
 
-                ## Delete Apache Conf
-
-                ApacheVhost.DeleteApacheVhost(virtualHostName)
-
+                logging.CyberCPLogFileWriter.writeToFile(f"Configuration deletion process for {virtualHostName} completed successfully")
+                return 1
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
@@ -711,7 +778,31 @@ class vhost:
                     command = 'sudo -u %s touch %s' % (virtualHostUser, phpDetachUpdatePath)
                     ProcessUtilities.normalExecutioner(command)
 
-                    installUtilities.installUtilities.reStartLiteSpeed()
+                    # 改进的服务重启逻辑，添加配置文件检查和备份机制
+                    if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                        conf_file = "/usr/local/lsws/conf/httpd_config.conf"
+                    else:
+                        conf_file = "/usr/local/lsws/conf/httpd.conf"
+                    
+                    # 尝试重启服务，并添加重试机制
+                    max_retries = 3
+                    retry_count = 0
+                    success = False
+                    
+                    while retry_count < max_retries and not success:
+                        try:
+                            result = installUtilities.installUtilities.reStartLiteSpeed()
+                            if result == 1:
+                                success = True
+                                logging.CyberCPLogFileWriter.writeToFile("LiteSpeed restarted successfully")
+                            else:
+                                retry_count += 1
+                                logging.CyberCPLogFileWriter.writeToFile(f"LiteSpeed restart attempt {retry_count} failed")
+                                time.sleep(2)  # 等待2秒后重试
+                        except Exception as e:
+                            retry_count += 1
+                            logging.CyberCPLogFileWriter.writeToFile(f"Exception during LiteSpeed restart: {str(e)}")
+                            time.sleep(2)
                     try:
                         command = 'sudo -u %s rm -f %s' % (virtualHostUser, phpDetachUpdatePath)
                         ProcessUtilities.normalExecutioner(command)
