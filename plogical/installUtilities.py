@@ -139,34 +139,31 @@ class installUtilities:
             # 添加配置文件检查，确保主配置文件存在且可访问
             conf_file = "/usr/local/lsws/conf/httpd_config.conf"
             if not os.path.exists(conf_file):
-                logging.CyberCPLogFileWriter.writeToFile(f"Configuration file {conf_file} not found! Cannot restart LiteSpeed.")
+                logging.CyberCPLogFileWriter.writeToFile("Configuration file does not exist [reStartLiteSpeed]")
                 return 0
             
             # 检查配置文件语法（如果可能）
             try:
                 # 简单检查文件是否为空
                 if os.path.getsize(conf_file) == 0:
-                    logging.CyberCPLogFileWriter.writeToFile("Configuration file is empty! Cannot restart LiteSpeed.")
+                    logging.CyberCPLogFileWriter.writeToFile("Configuration file is empty [reStartLiteSpeed]")
                     return 0
             except Exception as e:
-                logging.CyberCPLogFileWriter.writeToFile(f"Error checking configuration file: {str(e)}")
+                logging.CyberCPLogFileWriter.writeToFile(str(e) + " [reStartLiteSpeed]")
+                # 配置文件大小检查失败不影响重启，继续执行
+                pass
             
             # 确定服务器类型并设置相应的重启命令
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 command = "systemctl restart lsws"
-                service_name = "OpenLiteSpeed"
             else:
                 command = "/usr/local/lsws/bin/lswsctrl restart"
-                service_name = "LiteSpeed"
-            
-            logging.CyberCPLogFileWriter.writeToFile(f"Attempting to restart {service_name} server")
             
             # 添加重试机制，最多尝试3次
             max_attempts = 3
             success = False
             
             for attempt in range(1, max_attempts + 1):
-                logging.CyberCPLogFileWriter.writeToFile(f"Restart attempt {attempt}/{max_attempts}")
                 try:
                     # 使用更安全的执行方法
                     result = ProcessUtilities.executioner(command)
@@ -175,35 +172,37 @@ class installUtilities:
                     import time
                     time.sleep(2)
                     
-                    # 验证服务状态
+                    # 验证服务状态 - 使用更可靠的 is-active 命令
                     if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                        status_command = "systemctl status lsws | grep Active"
+                        status_command = "systemctl is-active lsws"
                     else:
                         status_command = "/usr/local/lsws/bin/lswsctrl status"
                     
                     status_result = ProcessUtilities.executioner(status_command)
                     
-                    if status_result[0] == 0:
-                        logging.CyberCPLogFileWriter.writeToFile(f"{service_name} server restarted successfully on attempt {attempt}")
-                        success = True
-                        break
+                    # 对于 systemctl is-active，检查输出是否为 "active"
+                    if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                        if status_result[0] == 0 and status_result[1].strip() == "active":
+                            success = True
+                            break
                     else:
-                        logging.CyberCPLogFileWriter.writeToFile(f"{service_name} server restart attempt {attempt} failed with status code {status_result[0]}")
-                        if attempt < max_attempts:
-                            # 增加等待时间后重试
-                            wait_time = 3 + (attempt - 1) * 2
-                            logging.CyberCPLogFileWriter.writeToFile(f"Waiting {wait_time} seconds before retry...")
-                            time.sleep(wait_time)
+                        if status_result[0] == 0:
+                            success = True
+                            break
+                    
+                    if attempt < max_attempts:
+                        # 增加等待时间后重试
+                        wait_time = 3 + (attempt - 1) * 2
+                        time.sleep(wait_time)
                 except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(f"Error during {service_name} restart attempt {attempt}: {str(e)}")
+                    logging.CyberCPLogFileWriter.writeToFile(str(e) + " - Attempt " + str(attempt) + " [reStartLiteSpeed]")
                     if attempt < max_attempts:
                         time.sleep(3)
             
             if not success:
-                logging.CyberCPLogFileWriter.writeToFile(f"Failed to restart {service_name} server after {max_attempts} attempts! Please check manually.")
+                logging.CyberCPLogFileWriter.writeToFile("Failed to restart LiteSpeed after " + str(max_attempts) + " attempts [reStartLiteSpeed]")
                 return 0
             
-            logging.CyberCPLogFileWriter.writeToFile(f"{service_name} server restart process completed successfully")
             return 1
 
         except OSError as msg:
@@ -212,7 +211,6 @@ class installUtilities:
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
             return 0
-        return 1
 
     @staticmethod
     def reStartLiteSpeedSocket():
