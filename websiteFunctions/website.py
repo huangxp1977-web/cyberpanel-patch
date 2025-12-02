@@ -3017,7 +3017,7 @@ context /{
     autoLoadHtaccess        0
     rules                   <<<END_rules
 RewriteEngine On
-RewriteCond %{REQUEST_URI} !^/cyberpanel_suspension_page\.html$
+RewriteCond %{REQUEST_URI} !^/cyberpanel_suspension_page\\.html$
 RewriteRule ^(.*)$ /cyberpanel_suspension_page.html [L]
 END_rules
   }
@@ -5333,13 +5333,13 @@ StrictHostKeyChecking no
 
         if pages <= 1.0:
             pages = 1
-            pagination.append('<li><a href="\#"></a></li>')
+            pagination.append('<li><a href="#"></a></li>')
         else:
             pages = ceil(pages)
             finalPages = int(pages) + 1
 
             for i in range(1, finalPages):
-                pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+                pagination.append('<li><a href="#">' + str(i) + '</a></li>')
 
         return pagination
 
@@ -5351,13 +5351,13 @@ StrictHostKeyChecking no
 
         if pages <= 1.0:
             pages = 1
-            pagination.append('<li><a href="\#"></a></li>')
+            pagination.append('<li><a href="#"></a></li>')
         else:
             pages = ceil(pages)
             finalPages = int(pages) + 1
 
             for i in range(1, finalPages):
-                pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+                pagination.append('<li><a href="#">' + str(i) + '</a></li>')
 
         return pagination
 

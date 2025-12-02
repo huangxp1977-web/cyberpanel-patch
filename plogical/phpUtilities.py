@@ -408,7 +408,7 @@ class phpUtilities:
             return result
 
         else:
-            command = f'grep -Po "php\d+" {vhFile} | head -n 1'
+            command = f'grep -Po "php\\d+" {vhFile} | head -n 1'
             result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
             result = f'/usr/local/lsws/ls{result}/bin/lsphp'
             result = result.rsplit("lsphp", 1)[0] + "php"

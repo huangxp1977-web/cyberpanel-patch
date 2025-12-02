@@ -1221,7 +1221,7 @@ class BackupManager:
                 ProcessUtilities.executioner(command, None, True)
 
                 # this command is for get port of SSH:
-                command = """grep -oP '^Port \K\d+' /etc/ssh/sshd_config | head -n 1"""
+                command = """grep -oP '^Port \\K\\d+' /etc/ssh/sshd_config | head -n 1"""
                 output = ProcessUtilities.outputExecutioner(command)
                 port = output.strip('\n')
 

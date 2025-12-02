@@ -677,10 +677,10 @@ mkdir /home/cyberpanel/plugins
 touch /home/cyberpanel/plugins/configservercsf
 
 if ! cat /usr/local/CyberCP/CyberCP/settings.py | grep -q configservercsf; then
-    sed -i "/pluginHolder/ i \ \ \ \ 'configservercsf'," /usr/local/CyberCP/CyberCP/settings.py
+    sed -i "/pluginHolder/ i \\\    'configservercsf'," /usr/local/CyberCP/CyberCP/settings.py
 fi
 if ! cat /usr/local/CyberCP/CyberCP/urls.py | grep -q configservercsf; then
-    sed -i "/pluginHolder/ i \ \ \ \ path('configservercsf/',include('configservercsf.urls'))," /usr/local/CyberCP/CyberCP/urls.py
+    sed -i "/pluginHolder/ i \\\    path('configservercsf/',include('configservercsf.urls'))," /usr/local/CyberCP/CyberCP/urls.py
 fi
 #if ! cat /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html | grep -q configservercsf; then
 #    sed -i "/url 'csf'/ i <li><a href='/configservercsf/' title='ConfigServer Security and Firewall'><span>ConfigServer Security \&amp; Firewall</span></a></li>" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html

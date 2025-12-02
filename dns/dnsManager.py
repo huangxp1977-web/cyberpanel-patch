@@ -760,7 +760,7 @@ class DNSManager:
                     final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': str(e), "data": '[]'})
                     return HttpResponse(final_json)
 
-                prog = re.compile('\.*' + zone_name + '$')
+                prog = re.compile(r'\.*' + zone_name + '$')
                 dns_records = sorted(dns_records, key=lambda v: prog.sub('', v['name']) + '_' + v['type'])
 
                 json_data = "["

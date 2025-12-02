@@ -148,13 +148,13 @@ def listDomains(request):
 
     if pages <= 1.0:
         pages = 1
-        pagination.append('<li><a href="\#"></a></li>')
+        pagination.append('<li><a href="\\#"></a></li>')
     else:
         pages = ceil(pages)
         finalPages = int(pages) + 1
 
         for i in range(1, finalPages):
-            pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+            pagination.append('<li><a href="\\#">' + str(i) + '</a></li>')
 
     proc = httpProc(request, 'emailPremium/listDomains.html',
                     {"pagination": pagination, "installCheck": installCheck}, 'admin')
@@ -307,13 +307,13 @@ def emailLimits(request, domain):
 
         if pages <= 1.0:
             pages = 1
-            pagination.append('<li><a href="\#"></a></li>')
+            pagination.append('<li><a href="\\#"></a></li>')
         else:
             pages = ceil(pages)
             finalPages = int(pages) + 1
 
             for i in range(1, finalPages):
-                pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+                pagination.append('<li><a href="\\#">' + str(i) + '</a></li>')
 
         Data['pagination'] = pagination
 
@@ -475,13 +475,13 @@ def emailPage(request, emailAddress):
 
     if pages <= 1.0:
         pages = 1
-        pagination.append('<li><a href="\#"></a></li>')
+        pagination.append('<li><a href="\\#"></a></li>')
     else:
         pages = ceil(pages)
         finalPages = int(pages) + 1
 
         for i in range(1, finalPages):
-            pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+            pagination.append('<li><a href="\\#">' + str(i) + '</a></li>')
 
     Data['pagination'] = pagination
 

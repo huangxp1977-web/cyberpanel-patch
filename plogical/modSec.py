@@ -271,7 +271,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             rulesFilePath = os.path.join(virtualHostUtilities.Server_root,"conf/modsec/rules.conf")
 
             if not os.path.exists(rulesFilePath):
-                initialRules = """SecRule ARGS "\.\./" "t:normalisePathWin,id:99999,severity:4,msg:'Drive Access' ,log,auditlog,deny"
+                initialRules = r"""SecRule ARGS "\.\./" "t:normalisePathWin,id:99999,severity:4,msg:'Drive Access' ,log,auditlog,deny"
 """
                 rule = open(rulesFilePath,'a+')
                 rule.write(initialRules)

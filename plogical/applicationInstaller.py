@@ -347,10 +347,10 @@ class ApplicationInstaller(multi.Thread):
             if ProcessUtilities.decideServer() == ProcessUtilities.ent:
                 htAccessPath = f'{finalPath}.htaccess'
 
-                command = f"sed -i '/# Fallback for Apache < 2.4/,/<\/IfModule>/d' {htAccessPath}"
+                command = rf"sed -i '/# Fallback for Apache < 2.4/,/<\/IfModule>/d' {htAccessPath}"
                 ProcessUtilities.executioner(command, externalApp, True)
 
-                command = f"sed -i '/# Apache 2.4+/,/<\/IfModule>/d' {htAccessPath}"
+                command = rf"sed -i '/# Apache 2.4+/,/<\/IfModule>/d' {htAccessPath}"
                 ProcessUtilities.executioner(command, externalApp, True)
 
 

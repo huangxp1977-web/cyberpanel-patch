@@ -3513,7 +3513,7 @@ class CloudManager:
                     hba_cmd = f"""sed -i 's/local   all             all                                     peer/local   all             all                                     md5/g' {pg_hba_path}"""
                     ProcessUtilities.executioner(hba_cmd, 'root', True)
                     # Also for host connections
-                    hba_cmd2 = f"""sed -i 's/host    all             all             127.0.0.1\/32            ident/host    all             all             127.0.0.1\/32            md5/g' {pg_hba_path}"""
+                    hba_cmd2 = r"sed -i 's/host    all             all             127.0.0.1/32            ident/host    all             all             127.0.0.1/32            md5/g' " + pg_hba_path
                     ProcessUtilities.executioner(hba_cmd2, 'root', True)
             else:
                 logging.writeToFile("[_setupPostgreSQLForN8N] Warning: PostgreSQL config not found, using default settings")

@@ -1055,10 +1055,10 @@ class FileManager:
             return HttpResponse(final_json)
 
         # Set file permissions first (before ownership to avoid conflicts)
-        command = "find %s -type d -exec chmod 0755 {} \;" % ("/home/" + domainName + "/public_html")
+        command = "find %s -type d -exec chmod 0755 {} \\;" % ("/home/" + domainName + "/public_html")
         ProcessUtilities.executioner(command)
 
-        command = "find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
+        command = "find %s -type f -exec chmod 0644 {} \\;" % ("/home/" + domainName + "/public_html")
         ProcessUtilities.executioner(command)
 
         # Set ownership for all files inside public_html to user:user
@@ -1080,10 +1080,10 @@ class FileManager:
                 return HttpResponse(final_json)
 
             # Set file permissions first
-            command = "find %s -type d -exec chmod 0755 {} \;" % (childs.path)
+            command = "find %s -type d -exec chmod 0755 {} \\;" % (childs.path)
             ProcessUtilities.executioner(command)
 
-            command = "find %s -type f -exec chmod 0644 {} \;" % (childs.path)
+            command = "find %s -type f -exec chmod 0644 {} \\;" % (childs.path)
             ProcessUtilities.executioner(command)
 
             # Set ownership for all files inside child domain to user:user

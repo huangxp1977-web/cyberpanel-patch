@@ -48,7 +48,7 @@ class emailMarketing(multi.Thread):
                     for items in data:
                         try:
                             for value in items:
-                                if re.match('^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$', value) != None:
+                                if re.match('^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,4})$', value) != None:
                                     try:
                                         getEmail = EmailsInList.objects.get(owner=newList, email=value)
                                     except:
@@ -69,7 +69,7 @@ class emailMarketing(multi.Thread):
                     emails = emailsList.readline()
                     while emails:
                         email = emails.strip('\n')
-                        if re.match('^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$', email) != None:
+                        if re.match('^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,4})$', email) != None:
                             try:
                                 getEmail = EmailsInList.objects.get(owner=newList, email=email)
                             except BaseException as msg:
@@ -342,8 +342,8 @@ class emailMarketing(multi.Thread):
                         'verificationCheck']) and not items.verificationStatus == 'REMOVED':
                         try:
                             port = ProcessUtilities.fetchCurrentPort()
-                            removalLink = "https:\/\/" + ipAddress + ":%s\/emailMarketing\/remove\/" % (port) + self.extraArgs[
-                                'listName'] + "\/" + items.email
+                            removalLink = "https:\\\/\\\/" + ipAddress + ":%s\\/emailMarketing\\/remove\\/" % (port) + self.extraArgs[
+                                'listName'] + "\\/" + items.email
                             messageText = emailMessage.emailMessage.encode('utf-8', 'replace')
                             message['To'] = items.email
 

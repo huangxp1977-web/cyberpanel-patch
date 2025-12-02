@@ -1510,10 +1510,10 @@ milter_default_action = accept
     def fixCyberPanelPermissions(self):
 
         ###### fix Core CyberPanel permissions
-        command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
+        command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \\;"
         ProcessUtilities.executioner(command)
 
-        command = "find /usr/local/CyberCP -type f -exec chmod 0644 {} \;"
+        command = "find /usr/local/CyberCP -type f -exec chmod 0644 {} \\;"
         ProcessUtilities.executioner(command)
 
         command = "chmod -R 755 /usr/local/CyberCP/bin"
@@ -1526,10 +1526,10 @@ milter_default_action = accept
 
         ########### Fix LSCPD
 
-        command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
+        command = "find /usr/local/lscp -type d -exec chmod 0755 {} \\;"
         ProcessUtilities.executioner(command)
 
-        command = "find /usr/local/lscp -type f -exec chmod 0644 {} \;"
+        command = "find /usr/local/lscp -type f -exec chmod 0644 {} \\;"
         ProcessUtilities.executioner(command)
 
         command = "chmod -R 755 /usr/local/lscp/bin"

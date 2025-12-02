@@ -690,7 +690,7 @@ class EmailMarketingManager:
             replyTo = data['replyTo']
             emailMessage = data['emailMessage']
 
-            if ACLManager.CheckRegEx('[\w\d\s]+$', name) == 0:
+            if ACLManager.CheckRegEx('[\\w\\d\\s]+$', name) == 0:
                 return ACLManager.loadErrorJson()
 
             admin = Administrator.objects.get(pk=userID)
