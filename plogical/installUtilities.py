@@ -182,13 +182,24 @@ class installUtilities:
                     
                     # 对于 systemctl is-active，检查输出是否为 "active"
                     if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                        if status_result[0] == 0 and status_result[1].strip() == "active":
-                            success = True
-                            break
+                        # 检查返回值类型
+                        if isinstance(status_result, tuple):
+                            if status_result[0] == 0 and status_result[1].strip() == "active":
+                                success = True
+                                break
+                        elif isinstance(status_result, int):
+                            if status_result == 0:
+                                success = True
+                                break
                     else:
-                        if status_result[0] == 0:
-                            success = True
-                            break
+                        if isinstance(status_result, tuple):
+                            if status_result[0] == 0:
+                                success = True
+                                break
+                        elif isinstance(status_result, int):
+                            if status_result == 0:
+                                success = True
+                                break
                     
                     if attempt < max_attempts:
                         # 增加等待时间后重试
