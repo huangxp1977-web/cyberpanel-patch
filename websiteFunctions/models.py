@@ -27,6 +27,7 @@ class ChildDomains(models.Model):
     path = models.CharField(max_length=200,default=None)
     ssl = models.IntegerField()
     phpSelection = models.CharField(max_length=10,default=None)
+    openBasedir = models.IntegerField(default=0)  # 添加openBasedir字段
     alais = models.IntegerField(default=0)
 
 
