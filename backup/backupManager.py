@@ -154,7 +154,7 @@ class BackupManager:
             from s3Backups.s3Backups import S3Backups
 
             pagination = S3Backups.getPagination(len(logs), recordsToShow)
-            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalPageNumber, endPageNumber = S3Backups.recordsPointer(page, recordsToShow)
             logs = logs[finalPageNumber:endPageNumber]
 
             json_data = "["
@@ -220,7 +220,7 @@ class BackupManager:
             from s3Backups.s3Backups import S3Backups
 
             pagination = S3Backups.getPagination(len(websites), recordsToShow)
-            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalPageNumber, endPageNumber = S3Backups.recordsPointer(page, recordsToShow)
             finalWebsites = websites[finalPageNumber:endPageNumber]
 
             json_data = "["
@@ -1492,7 +1492,7 @@ class BackupManager:
             from plogical.backupSchedule import backupSchedule
 
             pagination = S3Backups.getPagination(len(logs), recordsToShow)
-            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalPageNumber, endPageNumber = S3Backups.recordsPointer(page, recordsToShow)
             finalLogs = logs[finalPageNumber:endPageNumber]
 
             json_data = "["
@@ -1568,7 +1568,7 @@ class BackupManager:
             from s3Backups.s3Backups import S3Backups
 
             pagination = S3Backups.getPagination(len(websites), recordsToShow)
-            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalPageNumber, endPageNumber = S3Backups.recordsPointer(page, recordsToShow)
             finalWebsites = websites[finalPageNumber:endPageNumber]
 
             json_data = "["
@@ -1863,7 +1863,7 @@ class BackupManager:
             from s3Backups.s3Backups import S3Backups
 
             pagination = S3Backups.getPagination(len(logs), recordsToShow)
-            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalPageNumber, endPageNumber = S3Backups.recordsPointer(page, recordsToShow)
             logs = logs[finalPageNumber:endPageNumber]
 
             json_data = "["

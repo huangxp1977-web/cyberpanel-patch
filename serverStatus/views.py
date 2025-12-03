@@ -896,7 +896,7 @@ def fetchPackages(request):
         from s3Backups.s3Backups import S3Backups
 
         pagination = S3Backups.getPagination(len(packages), recordsToShow)
-        endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+        finalPageNumber, endPageNumber = S3Backups.recordsPointer(page, recordsToShow)
         finalPackages = packages[finalPageNumber:endPageNumber]
 
         json_data = "["

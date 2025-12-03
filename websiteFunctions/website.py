@@ -2479,7 +2479,7 @@ Require valid-user
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'Fetch sites step 1..')
 
-            endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
+            finalPageNumber, endPageNumber = self.recordsPointer(pageNumber, recordsToShow)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'Fetch sites step 2..')
@@ -2514,7 +2514,7 @@ Require valid-user
             pageNumber = int(data['page'])
             recordsToShow = int(data['recordsToShow'])
 
-            endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
+            finalPageNumber, endPageNumber = self.recordsPointer(pageNumber, recordsToShow)
             websites = ACLManager.findWebsiteObjects(currentACL, userID)
             childDomains = []
 
@@ -2797,7 +2797,7 @@ Require valid-user
     def recordsPointer(self, page, toShow):
         finalPageNumber = ((page * toShow)) - toShow
         endPageNumber = finalPageNumber + toShow
-        return endPageNumber, finalPageNumber
+        return finalPageNumber, endPageNumber
 
     def getPagination(self, records, toShow):
         pages = float(records) / float(toShow)
@@ -7190,7 +7190,7 @@ StrictHostKeyChecking no
             from s3Backups.s3Backups import S3Backups
 
             pagination = S3Backups.getPagination(len(logs), recordsToShow)
-            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalPageNumber, endPageNumber = S3Backups.recordsPointer(page, recordsToShow)
             jsonData = self.getLogsInJson(logs[finalPageNumber:endPageNumber])
 
             data_ret = {'status': 1, 'logs': jsonData, 'pagination': pagination}
@@ -7882,7 +7882,7 @@ StrictHostKeyChecking no
             recordsToShow = int(data['recordsToShow'])
 
 
-            endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
+            finalPageNumber, endPageNumber = self.recordsPointer(pageNumber, recordsToShow)
 
             dockersites = ACLManager.findDockersiteObjects(currentACL, userID)
             pagination = self.getPagination(len(dockersites), recordsToShow)

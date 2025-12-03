@@ -223,7 +223,7 @@ class EmailMarketingManager:
             from s3Backups.s3Backups import S3Backups
 
             pagination = S3Backups.getPagination(logsLen, recordsToShow)
-            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalPageNumber, endPageNumber = S3Backups.recordsPointer(page, recordsToShow)
             finalLogs = emailList.validationlog_set.all()[finalPageNumber:endPageNumber]
 
             json_data = "["

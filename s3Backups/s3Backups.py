@@ -73,7 +73,7 @@ class S3Backups(multi.Thread):
     def recordsPointer(page, toShow):
         finalPageNumber = ((page * toShow)) - toShow
         endPageNumber = finalPageNumber + toShow
-        return endPageNumber, finalPageNumber
+        return finalPageNumber, endPageNumber
 
     @staticmethod
     def getLogsInJson(logs):
@@ -411,7 +411,7 @@ class S3Backups(multi.Thread):
             logs = backupPlan.backuplogs_set.all().order_by('-id')
 
             pagination = S3Backups.getPagination(len(logs), recordsToShow)
-            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalPageNumber, endPageNumber = S3Backups.recordsPointer(page, recordsToShow)
             jsonData = S3Backups.getLogsInJson(logs[finalPageNumber:endPageNumber])
 
             data = {}
@@ -704,7 +704,7 @@ class S3Backups(multi.Thread):
             logs = backupPlan.backuplogsdo_set.all().order_by('-id')
 
             pagination = S3Backups.getPagination(len(logs), recordsToShow)
-            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalPageNumber, endPageNumber = S3Backups.recordsPointer(page, recordsToShow)
             jsonData = S3Backups.getLogsInJson(logs[finalPageNumber:endPageNumber])
 
             data = {}
@@ -1181,7 +1181,7 @@ class S3Backups(multi.Thread):
             logs = backupPlan.backuplogsminio_set.all().order_by('-id')
 
             pagination = S3Backups.getPagination(len(logs), recordsToShow)
-            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalPageNumber, endPageNumber = S3Backups.recordsPointer(page, recordsToShow)
             jsonData = S3Backups.getLogsInJson(logs[finalPageNumber:endPageNumber])
 
             data = {}

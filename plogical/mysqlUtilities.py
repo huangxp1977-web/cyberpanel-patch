@@ -70,7 +70,7 @@ class mysqlUtilities:
     def recordsPointer(page, toShow):
         finalPageNumber = ((page * toShow)) - toShow
         endPageNumber = finalPageNumber + toShow
-        return endPageNumber, finalPageNumber
+        return finalPageNumber, endPageNumber
 
     @staticmethod
     def setupConnection():
@@ -903,7 +903,7 @@ password=%s
             ##
 
             data['pagination'] = mysqlUtilities.getPagination(rows, recordsToShow)
-            endPageNumber, finalPageNumber = mysqlUtilities.recordsPointer(page, recordsToShow)
+            finalPageNumber, endPageNumber = mysqlUtilities.recordsPointer(page, recordsToShow)
 
             cursor.execute("select * from " + name['tableName'])
             result = cursor.fetchall()
