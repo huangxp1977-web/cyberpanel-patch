@@ -3747,51 +3747,7 @@ app.controller('launchChild', function ($scope, $http) {
     $scope.hideLogs = true;
     $scope.hideErrorLogs = true;
     
-    // Open_basedir protection
-    $scope.baseDirLoading = true;
-    $scope.operationFailed = true;
-    $scope.operationSuccessfull = true;
-    $scope.couldNotConnect = true;
-    $scope.openBaseDirBox = true;
-    
-    // 初始化子域名数据
-    function initChildDomainData() {
-        var childDomain = $('#childDomain').text();
-        
-        // 调用API获取子域名列表数据（包含openBasedir信息）
-        var url = '/websites/listChildDomains';
-        
-        var data = {
-            masterDomain: $('#domainNamePage').text(),
-            page: 1
-        };
-        
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-        
-        $http.post(url, data, config).then(function(response) {
-            if (response.data.listChildDomains === 1) {
-                var childDomains = JSON.parse(response.data.data);
-                
-                // 查找当前子域名的数据
-                for (var i = 0; i < childDomains.length; i++) {
-                    if (childDomains[i].domain === childDomain) {
-                        // 设置openBasedir值，将数值转换为对应的文本
-                        $scope.openBasedirValue = childDomains[i].openBasedir === 1 ? 'Enable' : 'Disable';
-                        break;
-                    }
-                }
-            }
-        }, function(error) {
-            console.log('Failed to fetch child domain data:', error);
-        });
-    }
-    
-    // 页面加载时初始化数据
-    initChildDomainData();
+
 
     $scope.hidelogsbtn = function () {
         $scope.hideLogs = true;
