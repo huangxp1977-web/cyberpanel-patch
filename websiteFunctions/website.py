@@ -2771,18 +2771,10 @@ Require valid-user
 
         for items in childs:
 
-            # Debug: Print phpSelection value
-            # 确保phpSelection为None或'None'时能正确显示
-            php_selection = items.phpSelection
-            
-            # 处理phpSelection为None、'None'或空字符串的情况
-            if php_selection is None or str(php_selection) == 'None' or (isinstance(php_selection, str) and php_selection.strip() == ''):
-                php_selection = ""
-            
             dic = {'domain': items.domain, 'masterDomain': items.master.domain, 'adminEmail': items.master.adminEmail,
                    'ipAddress': ipAddress,
                    'admin': items.master.admin.userName, 'package': items.master.package.packageName,
-                   'path': items.path, 'phpSelection': php_selection, 'ssl': items.ssl, 'openBasedir': items.openBasedir}
+                   'path': items.path}
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)

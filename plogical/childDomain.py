@@ -29,9 +29,6 @@ class ChildDomainManager:
                 dic = {
                     'childDomain': items.domain,
                     'path': items.path,
-                    'phpSelection': items.phpSelection,
-                    'ssl': items.ssl,
-                    'openBasedir': items.openBasedir,
                     'childLunch': '/websites/' + self.masterDomain + '/' + items.domain
                 }
 

@@ -1367,20 +1367,6 @@ local_name %s {
 
     @staticmethod
     def changeOpenBasedir(domainName, openBasedirValue):
-        # Update database record
-        try:
-            from websiteFunctions.models import ChildDomains
-            childDomain = ChildDomains.objects.get(domain=domainName)
-            if openBasedirValue == 'Enable':
-                childDomain.openBasedir = 1
-            else:
-                childDomain.openBasedir = 0
-            childDomain.save()
-        except Exception as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [changeOpenBasedir - Database Update]")
-            print("0," + str(msg))
-            return
-
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domainName
@@ -1620,7 +1606,8 @@ local_name %s {
             ## Now restart litespeed after initial configurations are done
 
             if LimitsCheck:
-                website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion, ssl=ssl, openBasedir=openBasedir, alais=alias)
+                website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion,
+                                       ssl=ssl, alais=alias)
                 website.save()
 
             if ssl == 1:
