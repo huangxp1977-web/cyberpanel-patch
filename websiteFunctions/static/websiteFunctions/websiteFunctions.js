@@ -12389,7 +12389,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
                 $scope.domainLoading = true;
 
-                $scope.changedPHPVersion = phpSelection;
+                $scope.changedPHPVersion = record.phpSelection;
 
 
                 // notifcations
@@ -13973,7 +13973,7 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
 
     };
 
-    $scope.changeChildBaseDir = function (childDomain, openBasedirValue) {
+    $scope.changeChildBaseDir = function (record) {
 
         // notifcations
 
@@ -13989,8 +13989,8 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
         var url = "/websites/changeOpenBasedir";
 
         var data = {
-            domainName: childDomain,
-            openBasedirValue: openBasedirValue
+            domainName: record.childDomain,
+            openBasedirValue: record.openBasedir
         };
 
         var config = {

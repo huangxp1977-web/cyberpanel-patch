@@ -1864,9 +1864,7 @@
                                                     <td>
                                                         <select ng-change="changePHP(record)"
                                                                 ng-model="record.phpSelection" class="form-control">
-                                                            {% for php in phps %}
-                                                                <option value="{{ php }}">{{ php }}</option>
-                                                            {% endfor %}
+                                                            <option ng-repeat="php in phps" value="{{ php }}">{{ php }}</option>
                                                         </select>
                                                     </td>
                                                     <td>
