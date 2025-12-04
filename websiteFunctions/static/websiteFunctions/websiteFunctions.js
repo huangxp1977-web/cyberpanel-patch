@@ -12354,7 +12354,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
     }
 
-    $scope.changePHP = function (childDomain, phpSelection) {
+    $scope.changePHP = function (record) {
 
         // notifcations
 
@@ -12369,8 +12369,8 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
         var url = "/websites/changePHP";
 
         var data = {
-            childDomain: childDomain,
-            phpSelection: phpSelection,
+            childDomain: record.childDomain,
+            phpSelection: record.phpSelection,
         };
 
         var config = {
@@ -12436,7 +12436,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
     };
 
-    $scope.changeChildBaseDir = function (childDomain, openBasedirValue) {
+    $scope.changeChildBaseDir = function (record) {
 
         // notifcations
 
@@ -12452,8 +12452,8 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
         var url = "/websites/changeOpenBasedir";
 
         var data = {
-            domainName: childDomain,
-            openBasedirValue: openBasedirValue
+            domainName: record.childDomain,
+            openBasedirValue: record.openBasedir
         };
 
         var config = {
@@ -13891,7 +13891,7 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
 
     }
 
-    $scope.changePHP = function (childDomain, phpSelection) {
+    $scope.changePHP = function (record) {
 
         // notifcations
 
@@ -13906,8 +13906,8 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
         var url = "/websites/changePHP";
 
         var data = {
-            childDomain: childDomain,
-            phpSelection: phpSelection,
+            childDomain: record.childDomain,
+            phpSelection: record.phpSelection,
         };
 
         var config = {
