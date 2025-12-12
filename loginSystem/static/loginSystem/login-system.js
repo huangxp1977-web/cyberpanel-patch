@@ -41,7 +41,35 @@ application.config(['$interpolateProvider',
 
 application.controller('loginSystem', function ($scope, $http, $window) {
 
-    $scope.verifyCode = true;
+    $scope.verifyCode = true; // Hide 2FA field by default
+
+    // Check if user has 2FA enabled when username field loses focus
+    $scope.check2FAOnBlur = function () {
+        var username = $scope.username;
+
+        if (!username || username.trim() === '') {
+            $scope.verifyCode = true; // Hide 2FA field if no username
+            return;
+        }
+
+        var url = "/check2FA";
+        var data = { username: username };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function (response) {
+            if (response.data.has2FA) {
+                $scope.verifyCode = false; // Show 2FA field
+            } else {
+                $scope.verifyCode = true; // Hide 2FA field
+            }
+        }, function (error) {
+            $scope.verifyCode = true; // Hide on error
+        });
+    };
 
     $scope.verifyLoginCredentials = function () {
 
@@ -76,10 +104,7 @@ application.controller('loginSystem', function ($scope, $http, $window) {
             if (response.data.loginStatus === 0) {
                 $scope.errorMessage = response.data.error_message;
                 $("#loginFailed").fadeIn();
-            }else if(response.data.loginStatus === 2){
-                $scope.verifyCode = false;
-            }
-            else {
+            } else {
                 $("#loginFailed").hide();
                 $window.location.href = '/base/';
             }

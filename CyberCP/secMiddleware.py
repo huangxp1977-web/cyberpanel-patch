@@ -37,7 +37,7 @@ class secMiddleware:
         import re
         webhook_pattern = re.compile(r'^/websites/[^/]+/(webhook|gitNotify)/?$')
         
-        if pathActual == "/backup/localInitiate" or  pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
+        if pathActual == "/backup/localInitiate" or pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/check2FA' or pathActual == '/logout' or pathActual.startswith('/api')\
                 or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI'):
             pass
         else:
@@ -188,7 +188,7 @@ class secMiddleware:
                     isAPIEndpoint = (pathActual.find('api/remoteTransfer') > -1 or pathActual.find('api/verifyConn') > -1 or 
                                    pathActual.find('saveSpamAssassinConfigurations') > -1 or 
                                    pathActual.find('docker') > -1 or pathActual.find('cloudAPI') > -1 or 
-                                   pathActual.find('verifyLogin') > -1 or pathActual.find('submitUserCreation') > -1 or 
+                                   pathActual.find('verifyLogin') > -1 or pathActual.find('check2FA') > -1 or pathActual.find('submitUserCreation') > -1 or 
                                    pathActual.find('/api/') > -1 or pathActual.find('aiscanner/scheduled-scans') > -1)
                     
                     if isAPIEndpoint:

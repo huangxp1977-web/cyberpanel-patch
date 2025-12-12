@@ -301,7 +301,7 @@
                         <div class="content-box-wrapper panel-body my-10 mx-30">
                             <div class="form-group">
                                 <div class="input-group">
-                                    <input ng-model="username" type="text" class="form-control" name="username"
+                                    <input ng-model="username" ng-blur="check2FAOnBlur()" type="text" class="form-control" name="username"
                                            placeholder="Enter username" required style="height: 45px;">
                                     <span class="input-group-addon bg-blue">
                       <i class="glyph-icon icon-envelope-o"></i>
@@ -337,22 +337,22 @@
                                     <select ng-model="languageSelection" ng-init="languageSelection='english'"
                                             class="form-control">
                                         <option value="english">English</option>
-                                        <option>Bangla</option>
-                                        <option>Bosnian</option>
-                                        <option>Bulgarian</option>
-                                        <option>Chinese</option>
-                                        <option>French</option>
-                                        <option>German</option>
-                                        <option>Greek</option>
-                                        <option>Italian</option>
-                                        <option>Indonesian</option>
-                                        <option>Japanese</option>
-                                        <option>Polish</option>
-                                        <option>Portuguese</option>
-                                        <option>Russian</option>
-                                        <option>Spanish</option>
-                                        <option>Turkish</option>
-                                        <option>Vietnamese</option>
+                                        <option value="bangla">Bangla</option>
+                                        <option value="bosnian">Bosnian</option>
+                                        <option value="bulgarian">Bulgarian</option>
+                                        <option value="chinese">Chinese</option>
+                                        <option value="french">French</option>
+                                        <option value="german">German</option>
+                                        <option value="greek">Greek</option>
+                                        <option value="italian">Italian</option>
+                                        <option value="indonesian">Indonesian</option>
+                                        <option value="japanese">Japanese</option>
+                                        <option value="polish">Polish</option>
+                                        <option value="portuguese">Portuguese</option>
+                                        <option value="russian">Russian</option>
+                                        <option value="spanish">Spanish</option>
+                                        <option value="turkish">Turkish</option>
+                                        <option value="vietnamese">Vietnamese</option>
                                     </select>
                                 </div>
                             </div>

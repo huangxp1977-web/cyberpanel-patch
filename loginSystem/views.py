@@ -11,13 +11,32 @@ from plogical.getSystemInformation import SystemInformation
 from .models import ACL
 from plogical.acl import ACLManager
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.conf import settings
 from django.http import HttpResponse
-from django.utils import translation
 # Create your views here.
 
 VERSION = '2.4'
 BUILD = 4
+
+
+def check2FAStatus(request):
+    """
+    API endpoint to check if a user has 2FA enabled
+    Returns: {'has2FA': true/false}
+    """
+    try:
+        data = json.loads(request.body)
+        username = data.get('username', '')
+        
+        if not username:
+            return HttpResponse(json.dumps({'has2FA': False}))
+        
+        try:
+            admin = Administrator.objects.get(userName=username)
+            return HttpResponse(json.dumps({'has2FA': bool(admin.twoFA)}))
+        except Administrator.DoesNotExist:
+            return HttpResponse(json.dumps({'has2FA': False}))
+    except:
+        return HttpResponse(json.dumps({'has2FA': False}))
 
 
 def verifyLogin(request):
@@ -34,9 +53,7 @@ def verifyLogin(request):
             if request.method == "POST":
                 try:
                     data = json.loads(request.body)
-                except json.JSONDecodeError as e:
-                    print(f"JSON decode error: {e}")
-                    print(f"Raw request body: {request.body}")
+                except json.JSONDecodeError:
                     data = {'userID': 0, 'loginStatus': 0, 'error_message': 'Invalid request format'}
                     json_data = json.dumps(data)
                     return HttpResponse(json_data)
@@ -44,95 +61,27 @@ def verifyLogin(request):
                 username = data.get('username', '')
                 password = data.get('password', '')
 
-                # Debug logging
-                print(f"Login attempt - Username: {username}, Password length: {len(password) if password else 0}")
-                print(f"Password contains '$': {'$' in password if password else False}")
-                print(f"Raw password: {repr(password)}")
-
-                try:
-                    language_selection = data.get('languageSelection', 'english')
-                    if language_selection == "English":
-                        user_Language = "en"
-                    elif language_selection == "Chinese":
-                        user_Language = "cn"
-                    elif language_selection == "Bulgarian":
-                        user_Language = "br"
-                    elif language_selection == "Portuguese":
-                        user_Language = "pt"
-                    elif language_selection == "Japanese":
-                        user_Language = "ja"
-                    elif language_selection == "Bosnian":
-                        user_Language = "bs"
-                    elif language_selection == "Greek":
-                        user_Language = "gr"
-                    elif language_selection == "Russian":
-                        user_Language = "ru"
-                    elif language_selection == "Turkish":
-                        user_Language = "tr"
-                    elif language_selection == "Spanish":
-                        user_Language = "es"
-                    elif language_selection == "French":
-                        user_Language = "fr"
-                    elif language_selection == "Polish":
-                        user_Language = "pl"
-                    elif language_selection == "Vietnamese":
-                        user_Language = "vi"
-                    elif language_selection == "Italian":
-                        user_Language = "it"
-                    elif language_selection == "German":
-                        user_Language = "de"
-                    elif language_selection == "Indonesian":
-                        user_Language = "id"
-                    elif language_selection == "Bangla":
-                        user_Language = "bn"
-                    else:
-                        user_Language = 'en'
-
-                    translation.activate(user_Language)
-                    response = HttpResponse()
-                    response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_Language)
-                except:
-                    user_Language = 'en'
-                    translation.activate(user_Language)
-                    response = HttpResponse()
-                    response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_Language)
-
             admin = Administrator.objects.get(userName=username)
-            print(f"Found admin user: {admin.userName}, password hash length: {len(admin.password) if admin.password else 0}")
 
             if admin.state == 'SUSPENDED':
                 data = {'userID': 0, 'loginStatus': 0, 'error_message': 'Account currently suspended.'}
                 json_data = json.dumps(data)
                 return HttpResponse(json_data)
 
-            if admin.twoFA:
-                try:
-                    twoinit = request.session['twofa']
-                except:
-                    request.session['twofa'] = 0
-                    data = {'userID': admin.pk, 'loginStatus': 2, 'error_message': "None"}
-                    json_data = json.dumps(data)
-                    response.write(json_data)
-                    return response
-
             password_check_result = hashPassword.check_password(admin.password, password)
-            print(f"Password check result: {password_check_result}")
 
             if password_check_result:
+                # Check if 2FA is enabled and validate if code provided
                 if admin.twoFA:
-                    if request.session.get('twofa', 1) == 0:
-                        import pyotp
-                        totp = pyotp.TOTP(admin.secretKey)
-                        twofa_code = data.get('twofa', '')
-                        if not twofa_code or str(totp.now()) != str(twofa_code):
-                            request.session['twofa'] = 0
-                            data = {'userID': 0, 'loginStatus': 0, 'error_message': "Invalid verification code."}
-                            json_data = json.dumps(data)
-                            response.write(json_data)
-                            return response
-                        # Clear the session flag after successful 2FA verification
-                        del request.session['twofa']
+                    import pyotp
+                    totp = pyotp.TOTP(admin.secretKey)
+                    twofa_code = data.get('twofa', '')
+                    if not twofa_code or str(totp.now()) != str(twofa_code):
+                        data = {'userID': 0, 'loginStatus': 0, 'error_message': "Invalid verification code."}
+                        json_data = json.dumps(data)
+                        return HttpResponse(json_data)
 
+                # Login successful
                 request.session['userID'] = admin.pk
 
                 ipAddr = request.META.get('HTTP_CF_CONNECTING_IP')
@@ -148,14 +97,12 @@ def verifyLogin(request):
                 request.session.set_expiry(43200)
                 data = {'userID': admin.pk, 'loginStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)
-                response.write(json_data)
-                return response
+                return HttpResponse(json_data)
 
             else:
                 data = {'userID': 0, 'loginStatus': 0, 'error_message': "login failed."}
                 json_data = json.dumps(data)
-                response.write(json_data)
-                return response
+                return HttpResponse(json_data)
 
         except BaseException as msg:
             data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
