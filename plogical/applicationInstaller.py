@@ -525,7 +525,8 @@ class ApplicationInstaller(multi.Thread):
 
     def installWPCLI(self):
         try:
-            command = 'wget -O /usr/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
+            # Try GitHub releases first (more reliable), fallback to raw content if needed
+            command = 'wget -O /usr/bin/wp https://github.com/wp-cli/wp-cli/releases/download/v2.9.0/wp-cli-2.9.0.phar || wget -O /usr/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
             ProcessUtilities.executioner(command)
 
             command = 'chmod +x /usr/bin/wp'
