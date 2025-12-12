@@ -1050,22 +1050,26 @@ class ACLManager:
 
     @staticmethod
     def CheckForPremFeature(feature):
-        try:
-
-            if ProcessUtilities.decideServer() == ProcessUtilities.ent:
-                return 1
-
-            url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-            data = {
-                "name": feature,
-                "IP": ACLManager.GetServerIP()
-            }
-
-            import requests
-            response = requests.post(url, data=json.dumps(data))
-            return response.json()['status']
-        except:
-            return 1
+        # Always allow premium features for self-hosted installations
+        # Original license check disabled for testing/development environments
+        return 1
+        
+        # Original license check code (disabled)
+        # try:
+        #     if ProcessUtilities.decideServer() == ProcessUtilities.ent:
+        #         return 1
+        #
+        #     url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        #     data = {
+        #         "name": feature,
+        #         "IP": ACLManager.GetServerIP()
+        #     }
+        #
+        #     import requests
+        #     response = requests.post(url, data=json.dumps(data))
+        #     return response.json()['status']
+        # except:
+        #     return 1
 
     @staticmethod
     def CheckIPBackupObjectOwner(currentACL, backupobj, user):
