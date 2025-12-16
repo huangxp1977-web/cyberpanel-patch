@@ -43,8 +43,8 @@ scripthandler  {
 extprocessor {virtualHostUser} {
   type                    lsapi
   address                 UDS://tmp/lshttpd/{virtualHostUser}.sock
-  maxConns                10
-  env                     LSAPI_CHILDREN=10
+  maxConns                50
+  env                     LSAPI_CHILDREN=50
   initTimeout             600
   retryTimeout            0
   persistConn             1
@@ -140,8 +140,8 @@ scripthandler  {
 extprocessor {externalApp} {
   type                    lsapi
   address                 UDS://tmp/lshttpd/{externalApp}.sock
-  maxConns                10
-  env                     LSAPI_CHILDREN=10
+  maxConns                50
+  env                     LSAPI_CHILDREN=50
   initTimeout             60
   retryTimeout            0
   persistConn             1
