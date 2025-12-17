@@ -506,52 +506,17 @@ log_info "Checking root privileges"
 Check_Server_IP() {
 log_function_start "Check_Server_IP"
 log_debug "Fetching server IP address"
-
-# Try multiple IP detection services to avoid CDN issues
-# Priority order: ipify.org (most reliable) -> ifconfig.me -> icanhazip.com -> cyberpanel.sh
-Server_IP=""
-
-# Try ipify.org first (most reliable, returns plain IP)
-Server_IP=$(curl --silent --max-time 10 -4 https://api.ipify.org 2>/dev/null)
-if [[ $Server_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  log_info "Valid server IP detected from ipify.org: $Server_IP"
-else
-  log_debug "Failed to get IP from ipify.org, trying ifconfig.me"
-  
-  # Try ifconfig.me as fallback
-  Server_IP=$(curl --silent --max-time 10 -4 https://ifconfig.me 2>/dev/null)
+Server_IP=$(curl --silent --max-time 30 -4 https://cyberpanel.sh/?ip)
   if [[ $Server_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    log_info "Valid server IP detected from ifconfig.me: $Server_IP"
+    echo -e "Valid IP detected..."
+    log_info "Valid server IP detected: $Server_IP"
   else
-    log_debug "Failed to get IP from ifconfig.me, trying icanhazip.com"
-    
-    # Try icanhazip.com as second fallback
-    Server_IP=$(curl --silent --max-time 10 -4 https://icanhazip.com 2>/dev/null | tr -d '\n')
-    if [[ $Server_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-      log_info "Valid server IP detected from icanhazip.com: $Server_IP"
-    else
-      log_debug "Failed to get IP from icanhazip.com, trying cyberpanel.sh"
-      
-      # Try cyberpanel.sh as last resort (may return CDN IP)
-      Server_IP=$(curl --silent --max-time 10 -4 https://cyberpanel.sh/?ip 2>/dev/null)
-      if [[ $Server_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        log_warning "IP detected from cyberpanel.sh (may be CDN IP): $Server_IP"
-      fi
-    fi
+    echo -e "Can not detect IP, exit..."
+    Debug_Log2 "Can not detect IP. [404]"
+    log_error "Failed to detect valid server IP address"
+    log_function_end "Check_Server_IP" 1
+    exit
   fi
-fi
-
-# Final validation
-if [[ $Server_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo -e "Valid IP detected..."
-  log_info "Final server IP: $Server_IP"
-else
-  echo -e "Can not detect IP, exit..."
-  Debug_Log2 "Can not detect IP. [404]"
-  log_error "Failed to detect valid server IP address from all sources"
-  log_function_end "Check_Server_IP" 1
-  exit
-fi
 
 
 echo -e "\nChecking server location...\n"
