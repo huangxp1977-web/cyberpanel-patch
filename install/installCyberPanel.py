@@ -76,7 +76,7 @@ class InstallCyberPanel:
             
             # Install MariaDB from official repository
             self.stdOut("Setting up official MariaDB repository...", 1)
-            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
+            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11"
             install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
             # Install MariaDB packages
@@ -813,8 +813,7 @@ Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
 """
 
             if get_Ubuntu_release() > 21.00:
-                # Added --retry 5 to avoid hanging on network issues
-                command = 'curl -L -sS --retry 5 https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+                command = 'curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
                 result = install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
                 
                 # If the download fails, use manual repo configuration as fallback
