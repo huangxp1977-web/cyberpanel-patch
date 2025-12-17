@@ -1024,9 +1024,10 @@ password="%s"
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            # Use curl with resume support and longer timeout for large file (14MB)
-            # -C - enables resume from where it left off if connection drops
-            command = 'curl -C - -L --connect-timeout 60 --max-time 600 --retry 3 -o /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
+            # Use curl with resume support for large file (14MB)
+            # -L follows redirects, -C - enables resume from where it left off if connection drops
+            # Removed timeout limits to avoid interruption on slow connections
+            command = 'curl -L -C - --retry 5 -o /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
 
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
@@ -1562,8 +1563,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             # Use curl instead of wget to avoid GitHub jwt:expired errors
             # curl handles GitHub releases better than wget
-            # Add -L to follow redirects, --connect-timeout and --max-time for timeout control
-            command = 'curl -L -C - --connect-timeout 60 --max-time 600 --retry 3 --retry-delay 5 -o snappymail-%s.zip https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (preFlightsChecks.SnappyVersion, preFlightsChecks.SnappyVersion, preFlightsChecks.SnappyVersion)
+            # Removed timeout limits to avoid interruption on slow connections
+            command = 'curl -L -C - --retry 5 --retry-delay 5 -o snappymail-%s.zip https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (preFlightsChecks.SnappyVersion, preFlightsChecks.SnappyVersion, preFlightsChecks.SnappyVersion)
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -1750,7 +1751,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 #             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             # Use curl instead of wget for better GitHub raw content access
-            command = f'curl -L -C - --connect-timeout 60 --max-time 600 --retry 5 -o /usr/local/CyberCP/snappymail_cyberpanel.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
+            # Removed timeout limits to avoid interruption on slow connections
+            command = f'curl -L -C - --retry 5 -o /usr/local/CyberCP/snappymail_cyberpanel.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = f'/usr/local/lsws/lsphp80/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
