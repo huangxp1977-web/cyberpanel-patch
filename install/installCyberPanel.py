@@ -76,8 +76,7 @@ class InstallCyberPanel:
             
             # Install MariaDB from official repository
             self.stdOut("Setting up official MariaDB repository...", 1)
-            # Added --retry 5 to avoid hanging on network issues
-            command = "curl -L -sS --retry 5 https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
+            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
             install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
             # Install MariaDB packages
@@ -893,8 +892,7 @@ gpgcheck=1
 
             else:
 
-                # Added --retry 5 to avoid hanging on network issues
-                command = 'curl -L -sS --retry 5 https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+                command = 'curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
                 install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
                 command = 'yum remove mariadb* -y'
