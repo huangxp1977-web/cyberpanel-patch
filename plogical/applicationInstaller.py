@@ -648,25 +648,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Setting up paths,0')
             statusFile.close()
 
-            #### Before installing wordpress change php to 8.0
-
-            from plogical.virtualHostUtilities import virtualHostUtilities
-
-            completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
-
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " changePHP --phpVersion 'PHP 8.3' --path " + completePathToConfigFile
-            ProcessUtilities.executioner(execPath)
-
-            ### lets first find php path
-
-            
-
-            command = "sed -i.bak 's/^memory_limit = .*/memory_limit = 256M/' /usr/local/lsws/lsphp83/etc/php/8.3/litespeed/php.ini"
-            ProcessUtilities.executioner(command)
-
-            command = "sed -i.bak 's/^memory_limit = .*/memory_limit = 256M/' /usr/local/lsws/lsphp83/etc/php.ini"
-            ProcessUtilities.executioner(command)
+            #### Get current PHP version from website configuration
 
             from plogical.phpUtilities import phpUtilities
 
@@ -675,16 +657,35 @@ class ApplicationInstaller(multi.Thread):
             try:
                 phpPath = phpUtilities.GetPHPVersionFromFile(vhFile)
             except:
+                # Fallback to PHP 8.3 if unable to detect
                 phpPath = '/usr/local/lsws/lsphp83/bin/php'
+            
+            # Extract PHP version number for memory limit configuration
+            import re
+            phpVersionMatch = re.search(r'lsphp(\d+)', phpPath)
+            if phpVersionMatch:
+                phpVer = phpVersionMatch.group(1)
+                phpVerDotted = f"{phpVer[0]}.{phpVer[1:]}"
+                
+                # Update memory limit for the detected PHP version
+                command = f"sed -i.bak 's/^memory_limit = .*/memory_limit = 256M/' /usr/local/lsws/lsphp{phpVer}/etc/php/{phpVerDotted}/litespeed/php.ini"
+                ProcessUtilities.executioner(command)
+
+                command = f"sed -i.bak 's/^memory_limit = .*/memory_limit = 256M/' /usr/local/lsws/lsphp{phpVer}/etc/php.ini"
+                ProcessUtilities.executioner(command)
 
 
-            ### basically for now php 8.3 is being checked
+            ### Check if detected PHP version exists, install if missing
 
             if not os.path.exists(phpPath):
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines('PHP 8.3 missing installing now..,20')
-                statusFile.close()
-                phpUtilities.InstallSaidPHP('83')
+                # Extract PHP version number to install
+                phpVersionMatch = re.search(r'lsphp(\d+)', phpPath)
+                if phpVersionMatch:
+                    phpVer = phpVersionMatch.group(1)
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(f'PHP {phpVer[0]}.{phpVer[1:]} missing, installing now..,20')
+                    statusFile.close()
+                    phpUtilities.InstallSaidPHP(phpVer)
 
 
             finalPath = ''
@@ -746,16 +747,16 @@ class ApplicationInstaller(multi.Thread):
             command = "rm -rf " + finalPath + "index.html"
             ProcessUtilities.executioner(command, externalApp)
 
-            # Always use PHP 8.3 for WordPress installation
-            FinalPHPPath = '/usr/local/lsws/lsphp83/bin/php'
+            # Use the website's configured PHP version for WordPress installation
+            FinalPHPPath = phpPath
             
-            # Ensure PHP 8.3 is installed
+            # Ensure the PHP version is installed
             if not os.path.exists(FinalPHPPath):
-                from plogical.phpUtilities import phpUtilities
-                phpUtilities.InstallSaidPHP('83')
-                if not os.path.exists(FinalPHPPath):
-                    # Fallback to detected PHP path if 8.3 install fails
-                    FinalPHPPath = phpPath
+                phpVersionMatch = re.search(r'lsphp(\d+)', FinalPHPPath)
+                if phpVersionMatch:
+                    phpVer = phpVersionMatch.group(1)
+                    from plogical.phpUtilities import phpUtilities
+                    phpUtilities.InstallSaidPHP(phpVer)
 
             ## Security Check
 
