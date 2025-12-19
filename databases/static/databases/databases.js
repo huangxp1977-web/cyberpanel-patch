@@ -645,7 +645,6 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
                 var form = document.createElement('form');
                 form.method = 'post';
                 form.action = '/phpmyadmin/phpmyadminsignin.php';
-                form.target = '_blank';
 
 // Create input elements for username and token
                 var usernameInput = document.createElement('input');
