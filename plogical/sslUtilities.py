@@ -228,22 +228,32 @@ class sslUtilities:
 
     @staticmethod
     def checkIfSSLMap(virtualHostName):
+        """检查所有 SSL listener 是否都包含指定域名的 map 条目"""
         try:
             data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
 
-            sslCheck = 0
+            sslListenerCount = 0
+            mapFoundCount = 0
+            inSSLListener = False
 
             for items in data:
-                if items.find("listener") > - 1 and items.find("SSL") > -1:
-                    sslCheck = 1
+                if items.find("listener") > -1 and items.find("SSL") > -1:
+                    inSSLListener = True
+                    sslListenerCount += 1
                     continue
-                if sslCheck == 1:
+                if inSSLListener:
                     if items.find("}") > -1:
-                        return 0
-                if items.find(virtualHostName) > -1 and sslCheck == 1:
-                    data = [_f for _f in items.split(" ") if _f]
-                    if data[1] == virtualHostName:
-                        return 1
+                        inSSLListener = False
+                        continue
+                    if items.find(virtualHostName) > -1:
+                        parts = [_f for _f in items.split(" ") if _f]
+                        if len(parts) > 1 and parts[1] == virtualHostName:
+                            mapFoundCount += 1
+
+            # 只有当所有 SSL listener 都有该 map 时才返回 1
+            if sslListenerCount > 0 and mapFoundCount >= sslListenerCount:
+                return 1
+            return 0
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [checkIfSSLMap]]")
@@ -521,16 +531,12 @@ context /.well-known/acme-challenge {
 
                         data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
                         writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
-                        sslCheck = 0
 
                         for items in data:
+                            # 在每个 SSL listener 行后添加 map
                             if items.find("listener") > -1 and items.find("SSL") > -1:
-                                sslCheck = 1
-
-                            if (sslCheck == 1):
                                 writeDataToFile.writelines(items)
                                 writeDataToFile.writelines(map)
-                                sslCheck = 0
                             else:
                                 writeDataToFile.writelines(items)
                         writeDataToFile.close()
