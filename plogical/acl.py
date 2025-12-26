@@ -639,8 +639,12 @@ class ACLManager:
 
     @staticmethod
     def findWebsiteObjects(currentACL, userID):
+        import socket
+        hostnameToHide = socket.gethostname()
+        
         if currentACL['admin'] == 1:
-            return Websites.objects.all().order_by('domain')
+            # 过滤掉系统主机名网站
+            return [w for w in Websites.objects.all().order_by('domain') if w.domain != hostnameToHide]
         else:
 
             websiteList = []
@@ -649,14 +653,16 @@ class ACLManager:
             websites = admin.websites_set.all().order_by('domain')
 
             for items in websites:
-                websiteList.append(items)
+                if items.domain != hostnameToHide:
+                    websiteList.append(items)
 
             admins = Administrator.objects.filter(owner=admin.pk)
 
             for items in admins:
                 webs = items.websites_set.all().order_by('domain')
                 for web in webs:
-                    websiteList.append(web)
+                    if web.domain != hostnameToHide:
+                        websiteList.append(web)
 
             return websiteList
 
