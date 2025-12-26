@@ -1345,6 +1345,20 @@ local_name %s {
                     except ChildDomains.DoesNotExist:
                         pass  # 两个表都没有，静默忽略
 
+                ## 清理 SSL 证书相关文件
+                try:
+                    import shutil
+                    sslLivePath = '/etc/letsencrypt/live/' + aliasDomain
+                    if os.path.exists(sslLivePath):
+                        shutil.rmtree(sslLivePath)
+                        logging.CyberCPLogFileWriter.writeToFile(f"Deleted SSL directory: {sslLivePath}")
+                    sslAccountKey = '/etc/letsencrypt/accounts/' + aliasDomain + '.key'
+                    if os.path.exists(sslAccountKey):
+                        os.remove(sslAccountKey)
+                        logging.CyberCPLogFileWriter.writeToFile(f"Deleted ACME account key: {sslAccountKey}")
+                except Exception as sslError:
+                    logging.CyberCPLogFileWriter.writeToFile(f"SSL cleanup warning: {str(sslError)}")
+
                 print("1,None")
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [deleteAlias]")
@@ -1377,6 +1391,20 @@ local_name %s {
                         alias.delete()
                     except ChildDomains.DoesNotExist:
                         pass  # 两个表都没有，静默忽略
+
+                ## 清理 SSL 证书相关文件
+                try:
+                    import shutil
+                    sslLivePath = '/etc/letsencrypt/live/' + aliasDomain
+                    if os.path.exists(sslLivePath):
+                        shutil.rmtree(sslLivePath)
+                        logging.CyberCPLogFileWriter.writeToFile(f"Deleted SSL directory: {sslLivePath}")
+                    sslAccountKey = '/etc/letsencrypt/accounts/' + aliasDomain + '.key'
+                    if os.path.exists(sslAccountKey):
+                        os.remove(sslAccountKey)
+                        logging.CyberCPLogFileWriter.writeToFile(f"Deleted ACME account key: {sslAccountKey}")
+                except Exception as sslError:
+                    logging.CyberCPLogFileWriter.writeToFile(f"SSL cleanup warning: {str(sslError)}")
 
                 print("1,None")
             except BaseException as msg:
@@ -1705,6 +1733,24 @@ local_name %s {
                 ProcessUtilities.executioner(command)
 
             delWebsite.delete()
+            
+            ## 清理 SSL 证书相关文件
+            try:
+                import shutil
+                # 删除 /etc/letsencrypt/live/域名/ 目录
+                sslLivePath = '/etc/letsencrypt/live/' + virtualHostName
+                if os.path.exists(sslLivePath):
+                    shutil.rmtree(sslLivePath)
+                    logging.CyberCPLogFileWriter.writeToFile(f"Deleted SSL directory: {sslLivePath}")
+                
+                # 删除 /etc/letsencrypt/accounts/域名.key 文件
+                sslAccountKey = '/etc/letsencrypt/accounts/' + virtualHostName + '.key'
+                if os.path.exists(sslAccountKey):
+                    os.remove(sslAccountKey)
+                    logging.CyberCPLogFileWriter.writeToFile(f"Deleted ACME account key: {sslAccountKey}")
+            except Exception as sslError:
+                logging.CyberCPLogFileWriter.writeToFile(f"SSL cleanup warning: {str(sslError)}")
+            
             installUtilities.installUtilities.reStartLiteSpeed()
 
             print("1,None")

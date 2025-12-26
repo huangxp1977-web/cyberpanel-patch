@@ -525,6 +525,18 @@ class vhost:
 
                 if os.path.exists('/root/.acme.sh/%s' % (virtualHostName)):
                     shutil.rmtree('/root/.acme.sh/%s' % (virtualHostName))
+                
+                ### Delete letsencrypt certificates
+                
+                sslLivePath = '/etc/letsencrypt/live/' + virtualHostName
+                if os.path.exists(sslLivePath):
+                    shutil.rmtree(sslLivePath)
+                    logging.CyberCPLogFileWriter.writeToFile(f"Deleted SSL directory: {sslLivePath}")
+                
+                sslAccountKey = '/etc/letsencrypt/accounts/' + virtualHostName + '.key'
+                if os.path.exists(sslAccountKey):
+                    os.remove(sslAccountKey)
+                    logging.CyberCPLogFileWriter.writeToFile(f"Deleted ACME account key: {sslAccountKey}")
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
