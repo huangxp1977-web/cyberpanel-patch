@@ -13538,7 +13538,7 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
 
                 $timeout(function () {
                     $window.location.reload();
-                }, 3000);
+                }, 500);
 
 
             } else {

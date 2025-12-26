@@ -73,11 +73,23 @@ class ACLManager:
 
     @staticmethod
     def AliasDomainCheck(currentACL, aliasDomain, master):
-        aliasOBJ = aliasDomains.objects.get(aliasDomain=aliasDomain)
         masterOBJ = Websites.objects.get(domain=master)
+        
+        # 先尝试从 aliasDomains 表查询
+        try:
+            aliasOBJ = aliasDomains.objects.get(aliasDomain=aliasDomain)
+            aliasMaster = aliasOBJ.master
+        except aliasDomains.DoesNotExist:
+            # 如果 aliasDomains 表没有，尝试从 ChildDomains 表查询 alais=1 的记录
+            try:
+                aliasOBJ = ChildDomains.objects.get(domain=aliasDomain, alais=1)
+                aliasMaster = aliasOBJ.master
+            except ChildDomains.DoesNotExist:
+                return 0  # 两个表都找不到，权限检查失败
+        
         if currentACL['admin'] == 1:
             return 1
-        elif aliasOBJ.master == masterOBJ:
+        elif aliasMaster == masterOBJ:
             return 1
         else:
             return 0

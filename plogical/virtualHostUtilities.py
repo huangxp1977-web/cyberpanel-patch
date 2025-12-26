@@ -1333,8 +1333,17 @@ local_name %s {
                 writeToFile.close()
                 installUtilities.installUtilities.reStartLiteSpeed()
 
-                delAlias = aliasDomains.objects.get(aliasDomain=aliasDomain)
-                delAlias.delete()
+                # 先尝试从 aliasDomains 表删除
+                try:
+                    delAlias = aliasDomains.objects.get(aliasDomain=aliasDomain)
+                    delAlias.delete()
+                except aliasDomains.DoesNotExist:
+                    # 如果 aliasDomains 表没有，尝试从 ChildDomains 表删除 alais=1 的记录
+                    try:
+                        delAlias = ChildDomains.objects.get(domain=aliasDomain, alais=1)
+                        delAlias.delete()
+                    except ChildDomains.DoesNotExist:
+                        pass  # 两个表都没有，静默忽略
 
                 print("1,None")
             except BaseException as msg:
@@ -1357,8 +1366,17 @@ local_name %s {
                 writeToFile.close()
                 installUtilities.installUtilities.reStartLiteSpeed()
 
-                alias = aliasDomains.objects.get(aliasDomain=aliasDomain)
-                alias.delete()
+                # 先尝试从 aliasDomains 表删除
+                try:
+                    alias = aliasDomains.objects.get(aliasDomain=aliasDomain)
+                    alias.delete()
+                except aliasDomains.DoesNotExist:
+                    # 如果 aliasDomains 表没有，尝试从 ChildDomains 表删除 alais=1 的记录
+                    try:
+                        alias = ChildDomains.objects.get(domain=aliasDomain, alais=1)
+                        alias.delete()
+                    except ChildDomains.DoesNotExist:
+                        pass  # 两个表都没有，静默忽略
 
                 print("1,None")
             except BaseException as msg:

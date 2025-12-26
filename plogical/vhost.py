@@ -318,6 +318,20 @@ class vhost:
     def createNONSSLMapEntry(virtualHostName):
         try:
             data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+            
+            # 先检查 Default listener 中是否已存在该域名的 map
+            defaultListenerCheck = 0
+            for items in data:
+                if items.find("listener") > -1 and items.find("Default") > -1:
+                    defaultListenerCheck = 1
+                    continue
+                if defaultListenerCheck == 1:
+                    if items.find("}") > -1:
+                        break  # Default listener 结束，未找到已存在的 map
+                    if items.find(virtualHostName) > -1 and items.find("map") > -1:
+                        # 已存在该域名的 map，无需重复插入
+                        return 1
+            
             writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
 
             map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"

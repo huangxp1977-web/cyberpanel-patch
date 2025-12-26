@@ -4537,8 +4537,27 @@ context /cyberpanel_suspension_page.html {
             else:
                 return ACLManager.loadErrorJson('deleteAlias', 0)
 
-            ## Create Configurations
+            ## 检查别名是否以 ChildDomain 方式存储（alais=1）
+            ## 如果是，需要调用 deleteDomain 来完整清理 virtualHost 配置
+            try:
+                childAlias = ChildDomains.objects.get(domain=aliasDomain, alais=1)
+                # 别名以 ChildDomain 方式存储，使用 deleteDomain 命令
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = execPath + " deleteDomain --virtualHostName " + aliasDomain + " --DeleteDocRoot 0"
+                output = ProcessUtilities.outputExecutioner(execPath)
+                
+                if output.find("1,None") > -1:
+                    data_ret = {'deleteAlias': 1, 'error_message': "None", "existsStatus": 0}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'deleteAlias': 0, 'error_message': output, "existsStatus": 0}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+            except ChildDomains.DoesNotExist:
+                pass  # 不是 ChildDomain 类型的别名，继续使用原有的 deleteAlias 逻辑
 
+            ## 原有的 deleteAlias 逻辑（处理 aliasDomains 表中的记录）
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteAlias --masterDomain " + self.domain + " --aliasDomain " + aliasDomain
             output = ProcessUtilities.outputExecutioner(execPath)
