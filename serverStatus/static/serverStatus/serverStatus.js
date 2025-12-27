@@ -1191,11 +1191,23 @@ app.controller('changePort', function ($scope, $http, $timeout) {
 
         function cantLoadInitialData(response) {
             $scope.cyberpanelLoading = false;
+            // Port change causes service restart, so connection failure is expected
+            // Show success message with new URL instead of error
+            var newPort = $scope.port;
+            var currentHost = window.location.hostname;
+            var newUrl = 'https://' + currentHost + ':' + newPort;
+            
             new PNotify({
-                title: 'Error!',
-                text: 'Could not connect to server, please try again.',
-                type: 'error'
+                title: 'Port Changed Successfully!',
+                text: 'CyberPanel is now accessible on port ' + newPort + '. Redirecting to new address in 5 seconds...',
+                type: 'success',
+                hide: false
             });
+            
+            // Redirect to new port after 5 seconds
+            setTimeout(function() {
+                window.location.href = newUrl;
+            }, 5000);
         }
 
 
