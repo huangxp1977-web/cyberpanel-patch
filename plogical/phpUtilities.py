@@ -70,6 +70,27 @@ class phpUtilities:
                 with open(phpUtilities.installLogPath, 'w') as f:
                     subprocess.call(cmd, stdout=f)
 
+                # Clean up .ini config files to prevent 'Unable to load dynamic library' warnings
+                # Extract module name and PHP version from extension name (e.g., lsphp82-sqlite3 -> sqlite3, 82)
+                import re
+                import glob
+                match = re.match(r'lsphp(\d+)-(.+)', extension)
+                if match:
+                    phpVersion = match.group(1)  # e.g., "82"
+                    moduleName = match.group(2)  # e.g., "sqlite3"
+                    # Convert version format: 82 -> 8.2
+                    phpVersionDot = phpVersion[0] + '.' + phpVersion[1:]
+                    # Find and delete matching .ini files
+                    iniPattern = f'/usr/local/lsws/lsphp{phpVersion}/etc/php/{phpVersionDot}/mods-available/{moduleName}.ini'
+                    for iniFile in glob.glob(iniPattern):
+                        try:
+                            os.remove(iniFile)
+                            writeToFile = open(phpUtilities.installLogPath, 'a')
+                            writeToFile.writelines(f"Removed config file: {iniFile}\n")
+                            writeToFile.close()
+                        except:
+                            pass
+
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("PHP Extension Removed.\n")
                 writeToFile.close()
