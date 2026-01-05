@@ -303,6 +303,11 @@ class tuning:
                         data = "  persistConn             " + str(persist) + "\n"
                         writeDataToFile.writelines(data)
                         continue
+                    elif items.find("LSAPI_CHILDREN") > -1:
+                        # Sync LSAPI_CHILDREN with maxConns to keep them consistent
+                        data = "  env                     LSAPI_CHILDREN=" + str(maxConns) + "\n"
+                        writeDataToFile.writelines(data)
+                        continue
                     else:
                         writeDataToFile.writelines(items)
 
