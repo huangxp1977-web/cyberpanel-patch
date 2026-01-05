@@ -32,7 +32,7 @@ class tuningManager:
     def phpTuning(self, request, userID):
         currentACL = ACLManager.loadedACL(userID)
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-            websitesName = ACLManager.findAllSites(currentACL, userID)
+            websitesName = ACLManager.findAllSites(currentACL, userID, 1)
             OLS = 1
             proc = httpProc(request, 'tuning/phpTuning.html',
                             {'websiteList': websitesName, 'OLS': OLS}, 'admin')
