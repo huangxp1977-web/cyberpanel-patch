@@ -534,6 +534,17 @@ def getDashboardStats(request):
             total_sites = Websites.objects.count()
             total_wp_sites = WPSites.objects.count()
             total_dbs = Databases.objects.count()
+            # Also get actual MySQL database count (excluding system dbs)
+            try:
+                from plogical.mysqlUtilities import mysqlUtilities
+                connection, cursor = mysqlUtilities.setupConnection()
+                cursor.execute("SHOW DATABASES")
+                all_dbs = cursor.fetchall()
+                system_dbs = ['information_schema', 'mysql', 'performance_schema', 'sys']
+                total_dbs = len([db[0] for db in all_dbs if db[0] not in system_dbs])
+                connection.close()
+            except:
+                pass  # Keep CyberPanel count on failure
             total_emails = EUsers.objects.count()
             total_ftp_users = FTPUsers.objects.count()
         else:
