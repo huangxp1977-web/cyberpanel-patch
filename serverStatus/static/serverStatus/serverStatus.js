@@ -204,7 +204,7 @@ app.controller('litespeedStatus', function ($scope, $http) {
 
         var url = "/serverstatus/changeLicense";
 
-        var data = {newKey: $scope.newKey};
+        var data = { newKey: $scope.newKey };
 
         var config = {
             headers: {
@@ -781,10 +781,45 @@ app.controller('lswsSwitch', function ($scope, $http, $timeout, $window) {
 app.controller('topProcesses', function ($scope, $http, $timeout) {
 
     $scope.cyberPanelLoading = true;
+    $scope.isFirstLoad = true;
+
+    // Sorting: default by MEM descending
+    $scope.sortBy = 'MEM';
+    $scope.sortOrder = 'desc';
+
+    // Sort function for table header clicks
+    $scope.sortProcesses = function (field) {
+        if ($scope.sortBy === field) {
+            // Toggle order if clicking same column
+            $scope.sortOrder = $scope.sortOrder === 'desc' ? 'asc' : 'desc';
+        } else {
+            $scope.sortBy = field;
+            $scope.sortOrder = 'desc';
+        }
+        $scope.applySorting();
+    };
+
+    // Apply sorting to processes array
+    $scope.applySorting = function () {
+        if ($scope.processes && $scope.processes.length > 0) {
+            $scope.processes.sort(function (a, b) {
+                var valA = parseFloat(a[$scope.sortBy]) || 0;
+                var valB = parseFloat(b[$scope.sortBy]) || 0;
+                if ($scope.sortOrder === 'desc') {
+                    return valB - valA;
+                } else {
+                    return valA - valB;
+                }
+            });
+        }
+    };
 
     $scope.topProcessesStatus = function () {
 
-        $scope.cyberPanelLoading = false;
+        // Only show loading overlay on first load
+        if ($scope.isFirstLoad) {
+            $scope.cyberPanelLoading = false;
+        }
 
         url = "/serverstatus/topProcessesStatus";
 
@@ -804,11 +839,17 @@ app.controller('topProcesses', function ($scope, $http, $timeout) {
             if (response.data.status === 1) {
                 $scope.processes = JSON.parse(response.data.data);
 
-                //CPU Details
-                $scope.cores = response.data.cores;
-                $scope.modelName = response.data.modelName;
-                $scope.cpuMHZ = response.data.cpuMHZ;
-                $scope.cacheSize = response.data.cacheSize;
+                // Apply current sorting
+                $scope.applySorting();
+
+                //CPU Details - only set on first load (these are static)
+                if (!$scope.cpuDetailsLoaded) {
+                    $scope.cores = response.data.cores;
+                    $scope.modelName = response.data.modelName;
+                    $scope.cpuMHZ = response.data.cpuMHZ;
+                    $scope.cacheSize = response.data.cacheSize;
+                    $scope.cpuDetailsLoaded = true;
+                }
 
                 //CPU Load
                 $scope.cpuNow = response.data.cpuNow;
@@ -840,6 +881,9 @@ app.controller('topProcesses', function ($scope, $http, $timeout) {
                 $scope.sleepingProcesses = response.data.sleepingProcesses;
                 $scope.stoppedProcesses = response.data.stoppedProcesses;
                 $scope.zombieProcesses = response.data.zombieProcesses;
+
+                // Mark first load as complete
+                $scope.isFirstLoad = false;
 
                 $timeout($scope.topProcessesStatus, 3000);
             } else {
@@ -1196,16 +1240,16 @@ app.controller('changePort', function ($scope, $http, $timeout) {
             var newPort = $scope.port;
             var currentHost = window.location.hostname;
             var newUrl = 'https://' + currentHost + ':' + newPort;
-            
+
             new PNotify({
                 title: 'Port Changed Successfully!',
                 text: 'CyberPanel is now accessible on port ' + newPort + '. Redirecting to new address in 5 seconds...',
                 type: 'success',
                 hide: false
             });
-            
+
             // Redirect to new port after 5 seconds
-            setTimeout(function() {
+            setTimeout(function () {
                 window.location.href = newUrl;
             }, 5000);
         }

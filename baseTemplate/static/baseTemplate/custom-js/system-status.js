@@ -120,10 +120,10 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
     $scope.uptimeLoaded = false;
     $scope.uptime = 'Loading...';
-    
+
     getStuff();
-    
-    $scope.getSystemStatus = function() {
+
+    $scope.getSystemStatus = function () {
         getStuff();
     };
 
@@ -139,20 +139,20 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
             $scope.cpuUsage = response.data.cpuUsage;
             $scope.ramUsage = response.data.ramUsage;
             $scope.diskUsage = response.data.diskUsage;
-            
+
             // Total system information
             $scope.cpuCores = response.data.cpuCores;
             $scope.ramTotalMB = response.data.ramTotalMB;
             $scope.diskTotalGB = response.data.diskTotalGB;
             $scope.diskFreeGB = response.data.diskFreeGB;
-            
+
             // Get uptime if available
             if (response.data.uptime) {
                 $scope.uptime = response.data.uptime;
                 $scope.uptimeLoaded = true;
             } else {
                 // Fallback: try to get uptime separately
-                $http.get("/base/getUptime").then(function(uptimeResponse) {
+                $http.get("/base/getUptime").then(function (uptimeResponse) {
                     if (uptimeResponse.data.uptime) {
                         $scope.uptime = uptimeResponse.data.uptime;
                         $scope.uptimeLoaded = true;
@@ -748,7 +748,7 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
     $scope.ExecutionStatus = true;
     $scope.ReportStatus = true;
     $scope.OnboardineDone = true;
-    
+
     var statusTimer = null;
 
     function statusFunc() {
@@ -771,7 +771,7 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
         function ListInitialData(response) {
             if (response.data.status === 1) {
                 if (response.data.abort === 1) {
-                    $scope.functionProgress = {"width": "100%"};
+                    $scope.functionProgress = { "width": "100%" };
                     $scope.functionStatus = response.data.currentStatus;
                     $scope.cyberpanelLoading = true;
                     $scope.OnboardineDone = false;
@@ -780,7 +780,7 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
                         statusTimer = null;
                     }
                 } else {
-                    $scope.functionProgress = {"width": response.data.installationProgress + "%"};
+                    $scope.functionProgress = { "width": response.data.installationProgress + "%" };
                     $scope.functionStatus = response.data.currentStatus;
                     statusTimer = $timeout(statusFunc, 3000);
                 }
@@ -788,7 +788,7 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
             } else {
                 $scope.cyberpanelLoading = true;
                 $scope.functionStatus = response.data.error_message;
-                $scope.functionProgress = {"width": response.data.installationProgress + "%"};
+                $scope.functionProgress = { "width": response.data.installationProgress + "%" };
                 if (statusTimer) {
                     $timeout.cancel(statusTimer);
                     statusTimer = null;
@@ -798,7 +798,7 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
         }
 
         function cantLoadInitialData(response) {
-            $scope.functionProgress = {"width": response.data.installationProgress + "%"};
+            $scope.functionProgress = { "width": response.data.installationProgress + "%" };
             $scope.functionStatus = 'Could not connect to server, please refresh this page.';
             $timeout.cancel();
         }
@@ -871,10 +871,10 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
         $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
         $scope.cyberpanelLoading = true;
         new PNotify({
-                    title: 'Success',
-                    text: 'Refresh your browser after 3 seconds to fetch new SSL.',
-                    type: 'success'
-                });
+            title: 'Success',
+            text: 'Refresh your browser after 3 seconds to fetch new SSL.',
+            type: 'success'
+        });
 
         function ListInitialData(response) {
             $scope.cyberpanelLoading = true;
@@ -911,7 +911,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.totalDBs = 0;
     $scope.totalEmails = 0;
     $scope.totalFTPUsers = 0;
-    
+
     // Hide system charts for non-admin users
     $scope.hideSystemCharts = false;
 
@@ -919,17 +919,57 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.topProcesses = [];
     $scope.loadingTopProcesses = true;
     $scope.errorTopProcesses = '';
-    $scope.refreshTopProcesses = function() {
-        $scope.loadingTopProcesses = true;
+
+    // Sorting for Top Processes: default by memory descending
+    $scope.processSortBy = 'memory';
+    $scope.processSortOrder = 'desc';
+
+    // Sort function for table header clicks
+    $scope.sortTopProcesses = function (field) {
+        if ($scope.processSortBy === field) {
+            $scope.processSortOrder = $scope.processSortOrder === 'desc' ? 'asc' : 'desc';
+        } else {
+            $scope.processSortBy = field;
+            $scope.processSortOrder = 'desc';
+        }
+        $scope.applyProcessSorting();
+    };
+
+    // Apply sorting to top processes array
+    $scope.applyProcessSorting = function () {
+        if ($scope.topProcesses && $scope.topProcesses.length > 0) {
+            $scope.topProcesses.sort(function (a, b) {
+                var valA = parseFloat(a[$scope.processSortBy]) || 0;
+                var valB = parseFloat(b[$scope.processSortBy]) || 0;
+                if ($scope.processSortOrder === 'desc') {
+                    return valB - valA;
+                } else {
+                    return valA - valB;
+                }
+            });
+        }
+    };
+
+    // Flag for first load - only show loading on first request
+    $scope.isFirstLoadProcesses = true;
+
+    $scope.refreshTopProcesses = function () {
+        // Only show loading on first load
+        if ($scope.isFirstLoadProcesses) {
+            $scope.loadingTopProcesses = true;
+        }
         $http.get('/base/getTopProcesses').then(function (response) {
             $scope.loadingTopProcesses = false;
+            $scope.isFirstLoadProcesses = false;
             if (response.data && response.data.status === 1 && response.data.processes) {
                 $scope.topProcesses = response.data.processes;
+                $scope.applyProcessSorting();
             } else {
                 $scope.topProcesses = [];
             }
         }, function (err) {
             $scope.loadingTopProcesses = false;
+            $scope.isFirstLoadProcesses = false;
             $scope.errorTopProcesses = 'Failed to load top processes.';
         });
     };
@@ -938,7 +978,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.sshLogins = [];
     $scope.loadingSSHLogins = true;
     $scope.errorSSHLogins = '';
-    $scope.refreshSSHLogins = function() {
+    $scope.refreshSSHLogins = function () {
         $scope.loadingSSHLogins = true;
         $http.get('/base/getRecentSSHLogins').then(function (response) {
             $scope.loadingSSHLogins = false;
@@ -959,7 +999,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.errorSSHLogs = '';
     $scope.securityAlerts = [];
     $scope.loadingSecurityAnalysis = false;
-    $scope.refreshSSHLogs = function() {
+    $scope.refreshSSHLogs = function () {
         $scope.loadingSSHLogs = true;
         $http.get('/base/getRecentSSHLogs').then(function (response) {
             $scope.loadingSSHLogs = false;
@@ -975,16 +1015,16 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.errorSSHLogs = 'Failed to load SSH logs.';
         });
     };
-    
+
     // Security Analysis
     $scope.showAddonRequired = false;
     $scope.addonInfo = {};
-    
+
     // IP Blocking functionality
     $scope.blockingIP = null;
     $scope.blockedIPs = {};
-    
-    $scope.analyzeSSHSecurity = function() {
+
+    $scope.analyzeSSHSecurity = function () {
         $scope.loadingSecurityAnalysis = true;
         $scope.showAddonRequired = false;
         $http.post('/base/analyzeSSHSecurity', {}).then(function (response) {
@@ -1003,27 +1043,27 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.loadingSecurityAnalysis = false;
         });
     };
-    
-    $scope.blockIPAddress = function(ipAddress) {
+
+    $scope.blockIPAddress = function (ipAddress) {
         if (!$scope.blockingIP) {
             $scope.blockingIP = ipAddress;
-            
+
             var data = {
                 ip_address: ipAddress
             };
-            
+
             var config = {
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken')
                 }
             };
-            
+
             $http.post('/base/blockIPAddress', data, config).then(function (response) {
                 $scope.blockingIP = null;
                 if (response.data && response.data.status === 1) {
                     // Mark IP as blocked
                     $scope.blockedIPs[ipAddress] = true;
-                    
+
                     // Show success notification
                     new PNotify({
                         title: 'Success',
@@ -1031,7 +1071,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                         type: 'success',
                         delay: 5000
                     });
-                    
+
                     // Refresh security analysis to update alerts
                     $scope.analyzeSSHSecurity();
                 } else {
@@ -1051,7 +1091,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 } else if (err.data && err.data.message) {
                     errorMessage = err.data.message;
                 }
-                
+
                 new PNotify({
                     title: 'Error',
                     text: errorMessage,
@@ -1076,11 +1116,11 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     // For rate calculation
     var lastRx = null, lastTx = null, lastDiskRead = null, lastDiskWrite = null, lastCPU = null;
     var lastCPUTimes = null;
-    var pollInterval = 2000; // ms
+    var pollInterval = 5000; // 5 seconds
     var maxPoints = 30;
 
     function pollDashboardStats() {
-        $http.get('/base/getDashboardStats').then(function(response) {
+        $http.get('/base/getDashboardStats').then(function (response) {
             if (response.data.status === 1) {
                 $scope.totalUsers = response.data.total_users;
                 $scope.totalSites = response.data.total_sites;
@@ -1094,7 +1134,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
 
     function pollTraffic() {
         console.log('pollTraffic called');
-        $http.get('/base/getTrafficStats').then(function(response) {
+        $http.get('/base/getTrafficStats').then(function (response) {
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
@@ -1131,7 +1171,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                         trafficChart.data.datasets[1].data = txData.slice();
                         trafficChart.update();
                         console.log('trafficChart first update:', trafficChart.data.labels, trafficChart.data.datasets[0].data, trafficChart.data.datasets[1].data);
-                        setTimeout(function() {
+                        setTimeout(function () {
                             if (window.trafficChart) {
                                 window.trafficChart.resize();
                                 window.trafficChart.update();
@@ -1148,7 +1188,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     }
 
     function pollDiskIO() {
-        $http.get('/base/getDiskIOStats').then(function(response) {
+        $http.get('/base/getDiskIOStats').then(function (response) {
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
@@ -1191,7 +1231,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     }
 
     function pollCPU() {
-        $http.get('/base/getCPULoadGraph').then(function(response) {
+        $http.get('/base/getCPULoadGraph').then(function (response) {
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
@@ -1202,9 +1242,9 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 var cpuTimes = response.data.cpu_times;
                 if (lastCPUTimes) {
                     var idle = cpuTimes[3];
-                    var total = cpuTimes.reduce(function(a, b) { return a + b; }, 0);
+                    var total = cpuTimes.reduce(function (a, b) { return a + b; }, 0);
                     var lastIdle = lastCPUTimes[3];
-                    var lastTotal = lastCPUTimes.reduce(function(a, b) { return a + b; }, 0);
+                    var lastTotal = lastCPUTimes.reduce(function (a, b) { return a + b; }, 0);
                     var idleDiff = idle - lastIdle;
                     var totalDiff = total - lastTotal;
                     var usage = totalDiff > 0 ? (100 * (1 - idleDiff / totalDiff)) : 0;
@@ -1241,31 +1281,31 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             data: {
                 labels: [],
                 datasets: [
-                    { 
-                        label: 'Download', 
-                        data: [], 
-                        borderColor: '#5b5fcf', 
-                        backgroundColor: 'rgba(91,95,207,0.1)', 
+                    {
+                        label: 'Download',
+                        data: [],
+                        borderColor: '#5b5fcf',
+                        backgroundColor: 'rgba(91,95,207,0.1)',
                         pointBackgroundColor: '#5b5fcf',
                         pointBorderColor: '#5b5fcf',
                         pointRadius: 3,
                         pointHoverRadius: 5,
                         borderWidth: 2,
-                        tension: 0.4, 
-                        fill: true 
+                        tension: 0.4,
+                        fill: true
                     },
-                    { 
-                        label: 'Upload', 
-                        data: [], 
-                        borderColor: '#4a90e2', 
-                        backgroundColor: 'rgba(74,144,226,0.1)', 
+                    {
+                        label: 'Upload',
+                        data: [],
+                        borderColor: '#4a90e2',
+                        backgroundColor: 'rgba(74,144,226,0.1)',
                         pointBackgroundColor: '#4a90e2',
                         pointBorderColor: '#4a90e2',
                         pointRadius: 3,
                         pointHoverRadius: 5,
                         borderWidth: 2,
-                        tension: 0.4, 
-                        fill: true 
+                        tension: 0.4,
+                        fill: true
                     }
                 ]
             },
@@ -1274,20 +1314,20 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 maintainAspectRatio: false,
                 animation: { duration: 0 },
                 plugins: {
-                    legend: { 
-                        display: true, 
+                    legend: {
+                        display: true,
                         position: 'top',
-                        labels: { 
+                        labels: {
                             font: { size: 12, weight: '600' },
                             color: '#64748b',
                             usePointStyle: true,
                             padding: 20
-                        } 
+                        }
                     },
                     title: { display: false },
-                    tooltip: { 
-                        enabled: true, 
-                        mode: 'index', 
+                    tooltip: {
+                        enabled: true,
+                        mode: 'index',
                         intersect: false,
                         backgroundColor: 'rgba(255,255,255,0.95)',
                         titleColor: '#2f3640',
@@ -1300,18 +1340,18 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 },
                 interaction: { mode: 'nearest', axis: 'x', intersect: false },
                 scales: {
-                    x: { 
-                        grid: { color: '#f0f0ff', drawBorder: false }, 
-                        ticks: { 
+                    x: {
+                        grid: { color: '#f0f0ff', drawBorder: false },
+                        ticks: {
                             font: { size: 11 },
                             color: '#94a3b8',
                             maxTicksLimit: 8
                         }
                     },
-                    y: { 
-                        beginAtZero: true, 
-                        grid: { color: '#f0f0ff', drawBorder: false }, 
-                        ticks: { 
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f0f0ff', drawBorder: false },
+                        ticks: {
                             font: { size: 11 },
                             color: '#94a3b8'
                         }
@@ -1321,7 +1361,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             }
         });
         window.trafficChart = trafficChart;
-        setTimeout(function() {
+        setTimeout(function () {
             if (window.trafficChart) {
                 window.trafficChart.resize();
                 window.trafficChart.update();
@@ -1334,31 +1374,31 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             data: {
                 labels: [],
                 datasets: [
-                    { 
-                        label: 'Read', 
-                        data: [], 
-                        borderColor: '#5b5fcf', 
-                        backgroundColor: 'rgba(91,95,207,0.1)', 
+                    {
+                        label: 'Read',
+                        data: [],
+                        borderColor: '#5b5fcf',
+                        backgroundColor: 'rgba(91,95,207,0.1)',
                         pointBackgroundColor: '#5b5fcf',
                         pointBorderColor: '#5b5fcf',
                         pointRadius: 3,
                         pointHoverRadius: 5,
                         borderWidth: 2,
-                        tension: 0.4, 
-                        fill: true 
+                        tension: 0.4,
+                        fill: true
                     },
-                    { 
-                        label: 'Write', 
-                        data: [], 
-                        borderColor: '#e74c3c', 
-                        backgroundColor: 'rgba(231,76,60,0.1)', 
+                    {
+                        label: 'Write',
+                        data: [],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231,76,60,0.1)',
                         pointBackgroundColor: '#e74c3c',
                         pointBorderColor: '#e74c3c',
                         pointRadius: 3,
                         pointHoverRadius: 5,
                         borderWidth: 2,
-                        tension: 0.4, 
-                        fill: true 
+                        tension: 0.4,
+                        fill: true
                     }
                 ]
             },
@@ -1367,20 +1407,20 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 maintainAspectRatio: false,
                 animation: { duration: 0 },
                 plugins: {
-                    legend: { 
-                        display: true, 
+                    legend: {
+                        display: true,
                         position: 'top',
-                        labels: { 
+                        labels: {
                             font: { size: 12, weight: '600' },
                             color: '#64748b',
                             usePointStyle: true,
                             padding: 20
-                        } 
+                        }
                     },
                     title: { display: false },
-                    tooltip: { 
-                        enabled: true, 
-                        mode: 'index', 
+                    tooltip: {
+                        enabled: true,
+                        mode: 'index',
                         intersect: false,
                         backgroundColor: 'rgba(255,255,255,0.95)',
                         titleColor: '#2f3640',
@@ -1393,18 +1433,18 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 },
                 interaction: { mode: 'nearest', axis: 'x', intersect: false },
                 scales: {
-                    x: { 
-                        grid: { color: '#f0f0ff', drawBorder: false }, 
-                        ticks: { 
+                    x: {
+                        grid: { color: '#f0f0ff', drawBorder: false },
+                        ticks: {
                             font: { size: 11 },
                             color: '#94a3b8',
                             maxTicksLimit: 8
                         }
                     },
-                    y: { 
-                        beginAtZero: true, 
-                        grid: { color: '#f0f0ff', drawBorder: false }, 
-                        ticks: { 
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f0f0ff', drawBorder: false },
+                        ticks: {
                             font: { size: 11 },
                             color: '#94a3b8'
                         }
@@ -1419,18 +1459,18 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             data: {
                 labels: [],
                 datasets: [
-                    { 
-                        label: 'CPU Usage (%)', 
-                        data: [], 
-                        borderColor: '#5b5fcf', 
-                        backgroundColor: 'rgba(91,95,207,0.1)', 
+                    {
+                        label: 'CPU Usage (%)',
+                        data: [],
+                        borderColor: '#5b5fcf',
+                        backgroundColor: 'rgba(91,95,207,0.1)',
                         pointBackgroundColor: '#5b5fcf',
                         pointBorderColor: '#5b5fcf',
                         pointRadius: 3,
                         pointHoverRadius: 5,
                         borderWidth: 2,
-                        tension: 0.4, 
-                        fill: true 
+                        tension: 0.4,
+                        fill: true
                     }
                 ]
             },
@@ -1439,20 +1479,20 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 maintainAspectRatio: false,
                 animation: { duration: 0 },
                 plugins: {
-                    legend: { 
-                        display: true, 
+                    legend: {
+                        display: true,
                         position: 'top',
-                        labels: { 
+                        labels: {
                             font: { size: 12, weight: '600' },
                             color: '#64748b',
                             usePointStyle: true,
                             padding: 20
-                        } 
+                        }
                     },
                     title: { display: false },
-                    tooltip: { 
-                        enabled: true, 
-                        mode: 'index', 
+                    tooltip: {
+                        enabled: true,
+                        mode: 'index',
                         intersect: false,
                         backgroundColor: 'rgba(255,255,255,0.95)',
                         titleColor: '#2f3640',
@@ -1465,19 +1505,19 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 },
                 interaction: { mode: 'nearest', axis: 'x', intersect: false },
                 scales: {
-                    x: { 
-                        grid: { color: '#f0f0ff', drawBorder: false }, 
-                        ticks: { 
+                    x: {
+                        grid: { color: '#f0f0ff', drawBorder: false },
+                        ticks: {
                             font: { size: 11 },
                             color: '#94a3b8',
                             maxTicksLimit: 8
                         }
                     },
-                    y: { 
-                        beginAtZero: true, 
-                        max: 100, 
-                        grid: { color: '#f0f0ff', drawBorder: false }, 
-                        ticks: { 
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: { color: '#f0f0ff', drawBorder: false },
+                        ticks: {
                             font: { size: 11 },
                             color: '#94a3b8'
                         }
@@ -1489,19 +1529,19 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
 
         // Redraw charts on tab shown
         $("a[data-toggle='tab']").on('shown.bs.tab', function (e) {
-            setTimeout(function() {
+            setTimeout(function () {
                 if (trafficChart) trafficChart.resize();
                 if (diskIOChart) diskIOChart.resize();
                 if (cpuChart) cpuChart.resize();
             }, 100);
         });
-        
+
         // Also handle custom tab switching
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             var tabs = document.querySelectorAll('a[data-toggle="tab"]');
-            tabs.forEach(function(tab) {
-                tab.addEventListener('click', function(e) {
-                    setTimeout(function() {
+            tabs.forEach(function (tab) {
+                tab.addEventListener('click', function (e) {
+                    setTimeout(function () {
                         if (trafficChart) trafficChart.resize();
                         if (diskIOChart) diskIOChart.resize();
                         if (cpuChart) cpuChart.resize();
@@ -1512,19 +1552,19 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     }
 
     // Initial setup
-    $timeout(function() {
+    $timeout(function () {
         // Check if user is admin before setting up charts
-        $http.get('/base/getAdminStatus').then(function(response) {
+        $http.get('/base/getAdminStatus').then(function (response) {
             if (response.data && response.data.admin === 1) {
                 setupCharts();
             } else {
                 $scope.hideSystemCharts = true;
             }
-        }).catch(function() {
+        }).catch(function () {
             // If error, assume non-admin and hide charts
             $scope.hideSystemCharts = true;
         });
-        
+
         // Immediately poll once so stats are updated on first load
         pollDashboardStats();
         pollTraffic();
@@ -1548,8 +1588,8 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.sshActivityUser = '';
     $scope.loadingSSHActivity = false;
     $scope.errorSSHActivity = '';
-    
-    $scope.viewSSHActivity = function(login) {
+
+    $scope.viewSSHActivity = function (login) {
         $scope.showSSHActivityModal = true;
         $scope.sshActivity = { processes: [], w: [] };
         $scope.sshActivityUser = login.user;
@@ -1561,20 +1601,20 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             var match = login.raw.match(/(pts\/[0-9]+)/);
             if (match) tty = match[1];
         }
-        $http.post('/base/getSSHUserActivity', { user: login.user, tty: tty }).then(function(response) {
+        $http.post('/base/getSSHUserActivity', { user: login.user, tty: tty }).then(function (response) {
             $scope.loadingSSHActivity = false;
             if (response.data) {
                 $scope.sshActivity = response.data;
             } else {
                 $scope.sshActivity = { processes: [], w: [] };
             }
-        }, function(err) {
+        }, function (err) {
             $scope.loadingSSHActivity = false;
             $scope.errorSSHActivity = (err.data && err.data.error) ? err.data.error : 'Failed to fetch activity.';
         });
     };
-    
-    $scope.closeSSHActivityModal = function() {
+
+    $scope.closeSSHActivityModal = function () {
         $scope.showSSHActivityModal = false;
         $scope.sshActivity = { processes: [], w: [] };
         $scope.sshActivityUser = '';
@@ -1583,7 +1623,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     };
 
     // Close modal when clicking backdrop
-    $scope.closeModalOnBackdrop = function(event) {
+    $scope.closeModalOnBackdrop = function (event) {
         if (event.target === event.currentTarget) {
             $scope.closeSSHActivityModal();
         }

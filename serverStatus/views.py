@@ -569,34 +569,82 @@ def topProcessesStatus(request):
         else:
             return ACLManager.loadError()
 
-        with open("/home/cyberpanel/top", "w") as outfile:
-            subprocess.call("top -n1 -b", shell=True, stdout=outfile)
+        # Use top for system stats and process list
+        # Use ProcessUtilities which has proper permissions to see all processes
+        topOutput = ProcessUtilities.outputExecutioner('top -n1 -b')
+        topData = topOutput.splitlines()
 
-        data = open('/home/cyberpanel/top', 'r').readlines()
+        # Safe parsing with defaults
+        try:
+            loadAVG = topData[0].split(' ')
+            loadAVG = [a for a in loadAVG if a != '']
+        except:
+            loadAVG = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
 
+        try:
+            loadNow = topData[2].split(' ')
+            loadNow = [a for a in loadNow if a != '']
+        except:
+            loadNow = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+
+        try:
+            processes = topData[1].split(' ')
+            processes = [a for a in processes if a != '']
+        except:
+            processes = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+
+        # Use top output for process list (already loaded above)
         json_data = "["
         checker = 0
         counter = 0
 
-        loadAVG = data[0].split(' ')
-        loadAVG = [a for a in loadAVG if a != '']
+        # Counters for process statistics
+        totalProcs = 0
+        runningProcs = 0
+        sleepingProcs = 0
+        stoppedProcs = 0
+        zombieProcs = 0
 
-        loadNow = data[2].split(' ')
-        loadNow = [a for a in loadNow if a != '']
-
-        processes = data[1].split(' ')
-        processes = [a for a in processes if a != '']
-
-        for items in data:
+        for items in topData:
             counter = counter + 1
+            # Skip header lines (first 7 lines in top output)
             if counter <= 7:
                 continue
 
-            points = items.split(' ')
+            points = items.split()
             points = [a for a in points if a != '']
 
+            if len(points) < 12:
+                continue
+
+            # top columns: PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ COMMAND
+            # Get state from column 7 (S)
+            originalStatCode = points[7] if len(points) > 7 else 'S'
+
+            # Count process states (count all for statistics)
+            totalProcs += 1
+            if originalStatCode == 'R':
+                runningProcs += 1
+                statCode = 'R'
+            elif originalStatCode == 'I':
+                sleepingProcs += 1
+                # Skip Idle kernel threads - don't add to display list
+                continue
+            elif originalStatCode == 'S' or originalStatCode == 'D':
+                sleepingProcs += 1
+                statCode = 'S'  # Normalize D to S for frontend display
+            elif originalStatCode == 'T':
+                stoppedProcs += 1
+                statCode = 'T'
+            elif originalStatCode == 'Z':
+                zombieProcs += 1
+                statCode = 'Z'
+            else:
+                sleepingProcs += 1  # Default to sleeping
+                statCode = 'S'  # Normalize unknown states to S
+
             dic = {'PID': points[0], 'User': points[1], 'VIRT': points[4],
-                   'RES': points[5], 'S': points[7], 'CPU': points[8], 'MEM': points[9],
+                   'RES': points[5], 'S': statCode, 'CPU': points[8], 'MEM': points[9],
                    'Time': points[10], 'Command': points[11]
                    }
 
@@ -613,18 +661,39 @@ def topProcessesStatus(request):
         data['error_message'] = 'None'
         data['data'] = json_data
 
-        ## CPU
-        data['cpuNow'] = loadNow[1]
-        data['cpuOne'] = loadAVG[-3].rstrip(',')
-        data['cpuFive'] = loadAVG[-2].rstrip(',')
-        data['cpuFifteen'] = loadAVG[-1]
+        ## CPU - with safe access
+        try:
+            data['cpuNow'] = loadNow[1] if len(loadNow) > 1 else '0'
+            data['cpuOne'] = loadAVG[-3].rstrip(',') if len(loadAVG) >= 3 else '0'
+            data['cpuFive'] = loadAVG[-2].rstrip(',') if len(loadAVG) >= 2 else '0'
+            data['cpuFifteen'] = loadAVG[-1] if len(loadAVG) >= 1 else '0'
+        except:
+            data['cpuNow'] = '0'
+            data['cpuOne'] = '0'
+            data['cpuFive'] = '0'
+            data['cpuFifteen'] = '0'
 
-        ## CPU Time spent
-
-        data['ioWait'] = loadNow[9] + '%'
-        data['idleTime'] = loadNow[7] + '%'
-        data['hwInterrupts'] = loadNow[11] + '%'
-        data['Softirqs'] = loadNow[13] + '%'
+        ## CPU Time spent - parse from top output using regex for reliability
+        try:
+            import re
+            # Get the CPU line from top output (usually line 3, index 2)
+            cpuLine = topData[2] if len(topData) > 2 else ''
+            
+            # Parse values like: 0.0 us, 0.5 sy, 0.0 ni, 99.5 id, 0.0 wa, 0.0 hi, 0.0 si
+            waMatch = re.search(r'(\d+\.?\d*)\s*wa', cpuLine)
+            idMatch = re.search(r'(\d+\.?\d*)\s*id', cpuLine)
+            hiMatch = re.search(r'(\d+\.?\d*)\s*hi', cpuLine)
+            siMatch = re.search(r'(\d+\.?\d*)\s*si', cpuLine)
+            
+            data['ioWait'] = waMatch.group(1) + '%' if waMatch else '0%'
+            data['idleTime'] = idMatch.group(1) + '%' if idMatch else '0%'
+            data['hwInterrupts'] = hiMatch.group(1) + '%' if hiMatch else '0%'
+            data['Softirqs'] = siMatch.group(1) + '%' if siMatch else '0%'
+        except:
+            data['ioWait'] = '0%'
+            data['idleTime'] = '0%'
+            data['hwInterrupts'] = '0%'
+            data['Softirqs'] = '0%'
 
         ## Memory
 
@@ -674,13 +743,12 @@ def topProcessesStatus(request):
         except:
             data['swapBuffCache'] = '%sMB' % ('0')
 
-        ## Processes
-
-        data['totalProcesses'] = processes[1]
-        data['runningProcesses'] = processes[3]
-        data['sleepingProcesses'] = processes[5]
-        data['stoppedProcesses'] = processes[7]
-        data['zombieProcesses'] = processes[9]
+        ## Processes - use counts from ps aux data
+        data['totalProcesses'] = str(totalProcs)
+        data['runningProcesses'] = str(runningProcs)
+        data['sleepingProcesses'] = str(sleepingProcs)
+        data['stoppedProcesses'] = str(stoppedProcs)
+        data['zombieProcesses'] = str(zombieProcs)
 
         ## CPU Details
 

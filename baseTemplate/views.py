@@ -1380,56 +1380,44 @@ def getTopProcesses(request):
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
         
-        import subprocess
-        import tempfile
+        from plogical.processUtilities import ProcessUtilities
         
-        # Create a temporary file to capture top output
-        with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp_file:
-            temp_path = temp_file.name
+        # Use ProcessUtilities for proper permissions to see all processes
+        topOutput = ProcessUtilities.outputExecutioner('top -n1 -b')
+        topData = topOutput.splitlines()
         
-        try:
-            # Get top processes data
-            with open(temp_path, "w") as outfile:
-                subprocess.call("top -n1 -b", shell=True, stdout=outfile)
+        processes = []
+        counter = 0
+        
+        for line in topData:
+            counter += 1
+            if counter <= 7:  # Skip header lines
+                continue
             
-            with open(temp_path, 'r') as infile:
-                data = infile.readlines()
+            # No limit - return all processes, frontend will limit display
             
-            processes = []
-            counter = 0
+            points = line.split()
+            points = [a for a in points if a != '']
             
-            for line in data:
-                counter += 1
-                if counter <= 7:  # Skip header lines
-                    continue
+            if len(points) >= 12:
+                # Get state and filter Idle kernel threads
+                statCode = points[7] if len(points) > 7 else 'S'
+                if statCode == 'I':
+                    continue  # Skip Idle kernel threads
                 
-                if len(processes) >= 10:  # Limit to top 10 processes
-                    break
-                
-                points = line.split()
-                points = [a for a in points if a != '']
-                
-                if len(points) >= 12:
-                    process = {
-                        'pid': points[0],
-                        'user': points[1],
-                        'cpu': points[8],
-                        'memory': points[9],
-                        'command': points[11]
-                    }
-                    processes.append(process)
-            
-            return HttpResponse(json.dumps({
-                'status': 1,
-                'processes': processes
-            }), content_type='application/json')
-            
-        finally:
-            # Clean up temporary file
-            try:
-                os.unlink(temp_path)
-            except:
-                pass
+                process = {
+                    'pid': points[0],
+                    'user': points[1],
+                    'cpu': points[8],
+                    'memory': points[9],
+                    'command': points[11]
+                }
+                processes.append(process)
+        
+        return HttpResponse(json.dumps({
+            'status': 1,
+            'processes': processes
+        }), content_type='application/json')
                 
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)

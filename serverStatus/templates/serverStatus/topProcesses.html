@@ -832,8 +832,20 @@
                         <th>{% trans "PID" %}</th>
                         <th>{% trans "User" %}</th>
                         <th>{% trans "State" %}</th>
-                        <th>{% trans "CPU %" %}</th>
-                        <th>{% trans "Memory %" %}</th>
+                        <th ng-click="sortProcesses('CPU')" style="cursor: pointer; user-select: none;">
+                            {% trans "CPU %" %}
+                            <span ng-show="sortBy=='CPU'" style="margin-left: 5px;">
+                                <i ng-show="sortOrder=='desc'">▼</i>
+                                <i ng-show="sortOrder=='asc'">▲</i>
+                            </span>
+                        </th>
+                        <th ng-click="sortProcesses('MEM')" style="cursor: pointer; user-select: none;">
+                            {% trans "Memory %" %}
+                            <span ng-show="sortBy=='MEM'" style="margin-left: 5px;">
+                                <i ng-show="sortOrder=='desc'">▼</i>
+                                <i ng-show="sortOrder=='asc'">▲</i>
+                            </span>
+                        </th>
                         <th>{% trans "VIRT" %}</th>
                         <th>{% trans "RES" %}</th>
                         <th>{% trans "Time" %}</th>
