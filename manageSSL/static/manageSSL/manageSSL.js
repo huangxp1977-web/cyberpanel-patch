@@ -241,7 +241,7 @@ app.controller('sslIssueCtrlV2', function ($scope, $http) {
 
 
 /* Java script code to issue SSL for hostname */
-app.controller('sslIssueForHostNameCtrl', function ($scope, $http) {
+app.controller('sslIssueForHostNameCtrl', function ($scope, $http, $timeout) {
 
     $scope.sslIssueCtrl = true;
     $scope.manageSSLLoading = true;
@@ -249,6 +249,16 @@ app.controller('sslIssueForHostNameCtrl', function ($scope, $http) {
     $scope.canNotIssue = true;
     $scope.sslIssued = true;
     $scope.couldNotConnect = true;
+
+    // Auto-select domain from URL parameter if provided (use $timeout to wait for Angular digest)
+    $timeout(function() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var domainParam = urlParams.get('domain');
+        if (domainParam) {
+            $scope.virtualHost = domainParam;
+            $scope.issueSSLBtn = false; // Show the Issue SSL button
+        }
+    }, 100);
 
     $scope.showbtn = function () {
         $scope.issueSSLBtn = false;

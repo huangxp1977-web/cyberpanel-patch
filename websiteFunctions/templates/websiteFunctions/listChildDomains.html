@@ -673,7 +673,7 @@
                         <div class="detail-content">
                             <div class="detail-label">{% trans "SSL Certificate" %}</div>
                             <div class="detail-value">
-                                <a ng-click="issueSSL(web.domain)" href="">
+                                <a ng-href="/manageSSL/sslForHostName?domain={$ web.domain $}" target="_blank">
                                     {% trans "Issue SSL" %}
                                 </a>
                             </div>
