@@ -2732,7 +2732,7 @@ Require valid-user
             dic = {'domain': items.domain, 'masterDomain': items.master.domain, 'adminEmail': items.master.adminEmail,
                    'ipAddress': ipAddress,
                    'admin': items.master.admin.userName, 'package': items.master.package.packageName,
-                   'path': items.path}
+                   'path': items.path, 'phpVersion': items.master.phpSelection}
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
@@ -3482,7 +3482,9 @@ context /cyberpanel_suspension_page.html {
             Data['diskInMB'] = DiskUsage
             Data['diskInMBTotal'] = website.package.diskSpace
 
+
             Data['phps'] = PHPManager.findPHPVersions()
+            Data['currentPHP'] = website.phpSelection
             import os
 
             servicePath = '/home/cyberpanel/postfix'
@@ -3695,6 +3697,7 @@ context /cyberpanel_suspension_page.html {
             Data['diskInMBTotal'] = website.package.diskSpace
 
             Data['phps'] = PHPManager.findPHPVersions()
+            Data['currentPHP'] = website.phpSelection
 
             servicePath = '/home/cyberpanel/postfix'
             if os.path.exists(servicePath):

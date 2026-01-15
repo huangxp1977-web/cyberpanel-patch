@@ -11961,11 +11961,23 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
         $scope.changePHPView = true;
     };
 
+    // Initialize phpSelectionMaster on page load
+    var initPHP = $('#currentPHPVersion').text();
+    if (initPHP && initPHP.trim()) {
+        $scope.phpSelectionMaster = initPHP.trim();
+    }
+
     $scope.changePHPMaster = function () {
         $scope.hidsslconfigs = true;
         $scope.configurationsBox = true;
         $scope.configurationsBoxRewrite = true;
         $scope.changePHPView = false;
+        
+        // Set initial PHP version from page data
+        var currentPHP = $('#currentPHPVersion').text();
+        if (currentPHP && currentPHP.trim()) {
+            $scope.phpSelectionMaster = currentPHP.trim();
+        }
     };
 
     $scope.changePHPVersionMaster = function (childDomain, phpSelection) {
@@ -14394,6 +14406,12 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
     $scope.hideChangePHPMaster = function () {
         $scope.changePHPView = true;
     };
+
+    // Initialize phpSelectionMaster on page load
+    var initPHP = $('#currentPHPVersion').text();
+    if (initPHP && initPHP.trim()) {
+        $scope.phpSelectionMaster = initPHP.trim();
+    }
 
     $scope.changePHPMaster = function () {
         $scope.hidsslconfigs = true;
@@ -18790,6 +18808,12 @@ app.controller('launchChild', function ($scope, $http) {
     $scope.hideChangePHPMaster = function () {
         $scope.changePHPView = true;
     };
+
+    // Initialize phpSelectionMaster on page load
+    var initPHP = $('#currentPHPVersion').text();
+    if (initPHP && initPHP.trim()) {
+        $scope.phpSelectionMaster = initPHP.trim();
+    }
 
     $scope.changePHPMaster = function () {
         $scope.hidsslconfigs = true;

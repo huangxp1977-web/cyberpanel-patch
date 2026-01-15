@@ -470,6 +470,11 @@
             font-size: 13px;
         }
 
+        select.form-control {
+            padding: 6px 12px;
+            height: auto;
+        }
+
         /* Modal and Form Modal Styling */
         .form-horizontal.bordered-row {
             background: var(--bg-secondary, white);
@@ -917,9 +922,8 @@
 
                             <div class="form-group">
                                 <div style="margin-bottom: 20px; text-align: right;">
-                                    <button ng-click="hidesslbtn()" type="button" class="btn btn-link"
-                                        style="color: var(--danger-color);">
-                                        <i class="fas fa-times" style="font-size: 20px;"></i>
+                                    <button type="button" class="btn btn-danger" ng-click="hidesslbtn()" title="{% trans 'Cancel' %}" style="background-color: #dc3545; border-color: #dc3545; color: white;">
+                                        <i class="fas fa-times"></i> {% trans "Cancel" %}
                                     </button>
                                 </div>
                                 <div class="row">
@@ -965,6 +969,11 @@
                                 <p>{% trans "Current configuration in the file fetched." %}</p>
                             </div>
 
+                            <div ng-hide="fetchedConfigsData" style="display: block; text-align: right; margin-top: 15px; margin-bottom: 15px;">
+                                <button type="button" class="btn btn-danger" ng-click="hideconfigbtn()" title="{% trans 'Cancel' %}">
+                                    <i class="fas fa-times"></i> {% trans "Cancel" %}
+                                </button>
+                            </div>
 
                             <div ng-hide="couldNotFetchConfigs" class="alert alert-danger">
                                 <p>{% trans "Could not fetch current configuration. Error message:" %} {$
@@ -987,11 +996,6 @@
 
 
                             <div ng-hide="fetchedConfigsData" class="form-group">
-                                <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
-                                    <a ng-click="hideconfigbtn()" href="">
-                                        <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
-                                    </a>
-                                </div>
                                 <div class="col-sm-12">
                                     <textarea ng-model="configData" rows="20" class="form-control"></textarea>
                                 </div>
@@ -1002,7 +1006,6 @@
                                 <div class="col-sm-4">
                                     <button type="button" ng-click="saveCongiruations()"
                                         class="btn btn-primary btn-lg">{% trans "Save" %}</button>
-
                                 </div>
                             </div>
 
@@ -1022,6 +1025,11 @@
                                 <p>{% trans "Current rewrite rules in the file fetched." %}</p>
                             </div>
 
+                            <div ng-hide="fetchedRewriteRules" style="display: block; text-align: right; margin-top: 15px; margin-bottom: 15px;">
+                                <button type="button" class="btn btn-danger" ng-click="hideRewriteRulesbtn()" title="{% trans 'Cancel' %}">
+                                    <i class="fas fa-times"></i> {% trans "Cancel" %}
+                                </button>
+                            </div>
 
                             <div ng-hide="couldNotFetchRewriteRules" class="alert alert-danger">
                                 <p>{% trans "Could not fetch current rewrite rules. Error message:" %} {$
@@ -1044,11 +1052,6 @@
 
 
                             <div ng-hide="fetchedRewriteRules" class="form-group">
-                                <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
-                                    <a ng-click="hideRewriteRulesbtn()" href="">
-                                        <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
-                                    </a>
-                                </div>
                                 <div class="col-sm-12">
                                     <textarea ng-model="rewriteRules" rows="10" class="form-control"></textarea>
                                 </div>
@@ -1056,10 +1059,9 @@
 
                             <div ng-hide="saveRewriteRulesBTN" class="form-group">
                                 <label class="col-sm-3 control-label"></label>
-                                <div class="col-sm-4">
+                                <div class="col-sm-6">
                                     <button type="button" ng-click="saveRewriteRules()"
                                         class="btn btn-primary btn-lg">{% trans "Save Rewrite Rules" %}</button>
-
                                 </div>
                             </div>
 
@@ -1074,21 +1076,23 @@
 
                         <form ng-hide="changePHPView" name="" action="/" class="form-horizontal bordered-row">
 
+                            <!-- Hidden element for current PHP version -->
+                            <span id="currentPHPVersion" style="display:none;">{{ currentPHP }}</span>
 
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
-                                <div class="col-sm-6">
-                                    <select ng-model="phpSelectionMaster" class="form-control">
+                                <div class="col-sm-5">
+                                    <select ng-model="phpSelectionMaster" ng-init="phpSelectionMaster='{{ currentPHP }}'" class="form-control">
                                         {% for php in phps %}
-                                        <option>{{ php }}</option>
+                                        <option {% if php == currentPHP %}selected{% endif %}>{{ php }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
 
-                                <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                    <a title="{% trans 'Cancel' %}" ng-click="hideChangePHPMaster()" href="">
-                                        <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
-                                    </a>
+                                <div class="col-sm-2">
+                                    <button type="button" class="btn btn-danger" ng-click="hideChangePHPMaster()" title="{% trans 'Cancel' %}">
+                                        <i class="fas fa-times"></i> {% trans "Cancel" %}
+                                    </button>
                                 </div>
 
                             </div>
@@ -1202,9 +1206,8 @@
                             </div>
 
                             <div class="col-sm-1">
-                                <button title="{% trans 'Cancel' %}" ng-click="hideOpenBasedir()" type="button"
-                                    class="btn btn-link" style="color: var(--danger-color);">
-                                    <i class="fas fa-times" style="font-size: 20px;"></i>
+                                <button type="button" class="btn btn-danger" ng-click="hideOpenBasedir()" title="{% trans 'Cancel' %}" style="background-color: #dc3545; border-color: #dc3545; color: white;">
+                                    <i class="fas fa-times"></i> {% trans "Cancel" %}
                                 </button>
                             </div>
                         </div>
