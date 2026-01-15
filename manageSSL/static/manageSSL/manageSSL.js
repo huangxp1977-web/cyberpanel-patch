@@ -267,9 +267,9 @@ app.controller('sslIssueForHostNameCtrl', function ($scope, $http, $timeout) {
 
     $scope.issueSSL = function () {
         $scope.manageSSLLoading = false;
+        $scope.couldNotConnect = true; // Hide connection error during request
 
         var url = "/manageSSL/obtainHostNameSSL";
-
 
         var data = {
             virtualHost: $scope.virtualHost,
@@ -278,52 +278,79 @@ app.controller('sslIssueForHostNameCtrl', function ($scope, $http, $timeout) {
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
-            }
+            },
+            timeout: 120000 // 2 minutes timeout for SSL issuance
         };
 
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
         function ListInitialDatas(response) {
-
+            $scope.manageSSLLoading = true;
 
             if (response.data.SSL == 1) {
-
                 $scope.sslIssueCtrl = true;
-                $scope.manageSSLLoading = true;
                 $scope.issueSSLBtn = false;
                 $scope.canNotIssue = true;
                 $scope.sslIssued = false;
                 $scope.couldNotConnect = true;
-
                 $scope.sslDomain = $scope.virtualHost;
 
+                // Show success notification
+                new PNotify({
+                    title: 'SSL Issued Successfully',
+                    text: 'SSL certificate has been issued for ' + $scope.virtualHost,
+                    type: 'success'
+                });
 
             } else {
                 $scope.sslIssueCtrl = true;
-                $scope.manageSSLLoading = true;
                 $scope.issueSSLBtn = false;
                 $scope.canNotIssue = false;
                 $scope.sslIssued = true;
                 $scope.couldNotConnect = true;
-                $scope.errorMessage = response.data.error_message;
+                $scope.errorMessage = response.data.error_message || 'Unknown error occurred';
 
+                // Show error notification
+                new PNotify({
+                    title: 'SSL Issuance Failed',
+                    text: $scope.errorMessage,
+                    type: 'error'
+                });
             }
-
-
         }
 
         function cantLoadInitialDatas(response) {
-            $scope.sslIssueCtrl = true;
             $scope.manageSSLLoading = true;
             $scope.issueSSLBtn = false;
-            $scope.canNotIssue = true;
-            $scope.sslIssued = true;
-            $scope.couldNotConnect = false;
-
+            
+            // Check if it's a timeout error
+            if (response.status === -1) {
+                // Request likely succeeded but took too long - show info message
+                $scope.canNotIssue = true;
+                $scope.sslIssued = true;
+                $scope.couldNotConnect = true; // Hide generic error
+                
+                new PNotify({
+                    title: 'Request Timeout',
+                    text: 'The SSL request took longer than expected. Please check if the certificate was issued by refreshing the page or testing the website directly.',
+                    type: 'info',
+                    delay: 8000
+                });
+            } else {
+                // Actual connection error
+                $scope.sslIssueCtrl = true;
+                $scope.canNotIssue = true;
+                $scope.sslIssued = true;
+                $scope.couldNotConnect = false;
+                
+                new PNotify({
+                    title: 'Connection Error',
+                    text: 'Could not connect to server. Status: ' + response.status,
+                    type: 'error'
+                });
+            }
         }
-
-
     };
 
 });
