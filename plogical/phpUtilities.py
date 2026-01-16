@@ -76,20 +76,36 @@ class phpUtilities:
                 import glob
                 match = re.match(r'lsphp(\d+)-(.+)', extension)
                 if match:
-                    phpVersion = match.group(1)  # e.g., "82"
-                    moduleName = match.group(2)  # e.g., "sqlite3"
-                    # Convert version format: 82 -> 8.2
+                    phpVersion = match.group(1)  # e.g., "81"
+                    moduleName = match.group(2)  # e.g., "pgsql" or "sqlite3"
+                    # Convert version format: 81 -> 8.1
                     phpVersionDot = phpVersion[0] + '.' + phpVersion[1:]
-                    # Find and delete matching .ini files
-                    iniPattern = f'/usr/local/lsws/lsphp{phpVersion}/etc/php/{phpVersionDot}/mods-available/{moduleName}.ini'
-                    for iniFile in glob.glob(iniPattern):
-                        try:
-                            os.remove(iniFile)
-                            writeToFile = open(phpUtilities.installLogPath, 'a')
-                            writeToFile.writelines(f"Removed config file: {iniFile}\n")
-                            writeToFile.close()
-                        except:
-                            pass
+                    modsPath = f'/usr/local/lsws/lsphp{phpVersion}/etc/php/{phpVersionDot}/mods-available'
+                    
+                    # Fixed mapping from package name suffix to exact .ini file names
+                    iniMapping = {
+                        'pgsql': ['pdo_pgsql.ini', 'pgsql.ini'],
+                        'sqlite3': ['pdo_sqlite.ini', 'sqlite3.ini'],
+                        'sybase': ['pdo_dblib.ini'],
+                        'mysql': ['pdo_mysql.ini', 'mysqli.ini'],
+                        'odbc': ['pdo_odbc.ini', 'odbc.ini'],
+                        'firebird': ['pdo_firebird.ini'],
+                        'oci8': ['pdo_oci.ini', 'oci8.ini'],
+                    }
+                    
+                    # Get the list of .ini files to delete for this module
+                    iniFiles = iniMapping.get(moduleName, [f'{moduleName}.ini', f'pdo_{moduleName}.ini'])
+                    
+                    for iniName in iniFiles:
+                        iniPath = f'{modsPath}/{iniName}'
+                        if os.path.exists(iniPath):
+                            try:
+                                os.remove(iniPath)
+                                writeToFile = open(phpUtilities.installLogPath, 'a')
+                                writeToFile.writelines(f"Removed config file: {iniPath}\n")
+                                writeToFile.close()
+                            except:
+                                pass
 
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("PHP Extension Removed.\n")
